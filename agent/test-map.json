@@ -1,0 +1,180 @@
+{
+  "tests": {
+    ".github/": {
+      "command": "just fast && just check",
+      "lane": "ci",
+      "purpose": "verify hosted workflows stay thin and local-reproducible"
+    },
+    "AGENTS.md": {
+      "command": "just score",
+      "lane": "score",
+      "purpose": "verify split metadata and agent maps"
+    },
+    "Cargo.toml": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify workspace manifest shape"
+    },
+    "bench/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "bins/jeryu-phase11-bin/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "configs/signrail.example.toml": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "crates/jeryu-bench/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "crates/jeryu-compliance-export/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "crates/jeryu-evidence/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "crates/jeryu-git-guard/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "crates/jeryu-kernel/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "crates/jeryu-lifecycle/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "crates/jeryu-mapcheck/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "crates/jeryu-obs/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "crates/jeryu-ops/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "crates/jeryu-phase11-audit/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "crates/jeryu-phase11-core/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "crates/jeryu-replay-verifier/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "crates/jeryu-repogate/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "crates/jeryu-signing/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "crates/jeryu-signrail/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "crates/jeryu-tenant/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "crates/jeryu-wsversion/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "dashboards/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "fixtures/benchmarks/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "fixtures/chaos/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "fixtures/security/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "fixtures/sso/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "fixtures/upgrade/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "ops/bench/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "ops/chaos/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "ops/security/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "ops/signrail-verify/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "ops/upgrade/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    },
+    "tools/**": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
+    }
+  },
+  "workspace": "jeryu-release-ops"
+}
