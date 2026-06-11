@@ -188,16 +188,14 @@ fn workspace_packages(root: &Path) -> Result<Vec<Package>> {
         if !workspace_members.contains(id) {
             continue;
         }
-        let name = package
-            .get("name")
-            .and_then(Value::as_str)
-            .unwrap_or_default()
-            .to_string();
-        let manifest_path = package
-            .get("manifest_path")
-            .and_then(Value::as_str)
-            .map(PathBuf::from)
-            .unwrap_or_default();
+        let name = match package.get("name").and_then(Value::as_str) {
+            Some(name) => name.to_string(),
+            None => String::new(),
+        };
+        let manifest_path = match package.get("manifest_path").and_then(Value::as_str) {
+            Some(path) => PathBuf::from(path),
+            None => PathBuf::new(),
+        };
         let root = manifest_path
             .parent()
             .map(Path::to_path_buf)

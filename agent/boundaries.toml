@@ -27,3 +27,11 @@ cargo_members = [
   "crates/jeryu-git-guard",
   "bins/jeryu-phase11-bin",
 ]
+
+[python]
+allowed_non_product_paths = ["ops/split/"]
+
+[db]
+root_paths = ["db"]
+migration_paths = ["db/migrations"]
+constraint_paths = ["db/constraints"]
