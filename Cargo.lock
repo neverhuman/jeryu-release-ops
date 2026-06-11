@@ -459,11 +459,11 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 
 [[package]]
 name = "jeryu-bench"
-version = "4.0.0"
+version = "5.0.0"
 
 [[package]]
 name = "jeryu-compliance-export"
-version = "4.0.0"
+version = "5.0.0"
 dependencies = [
  "jeryu-phase11-audit",
  "jeryu-phase11-core",
@@ -471,7 +471,7 @@ dependencies = [
 
 [[package]]
 name = "jeryu-evidence"
-version = "4.0.0"
+version = "5.0.0"
 dependencies = [
  "clap",
  "hex",
@@ -481,11 +481,11 @@ dependencies = [
 
 [[package]]
 name = "jeryu-git-guard"
-version = "4.0.0"
+version = "5.0.0"
 
 [[package]]
 name = "jeryu-kernel"
-version = "4.0.0"
+version = "5.0.0"
 dependencies = [
  "jeryu-compliance-export",
  "jeryu-lifecycle",
@@ -498,7 +498,7 @@ dependencies = [
 
 [[package]]
 name = "jeryu-lifecycle"
-version = "4.0.0"
+version = "5.0.0"
 dependencies = [
  "jeryu-phase11-audit",
  "jeryu-phase11-core",
@@ -506,7 +506,7 @@ dependencies = [
 
 [[package]]
 name = "jeryu-mapcheck"
-version = "4.0.0"
+version = "5.0.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -518,11 +518,11 @@ dependencies = [
 
 [[package]]
 name = "jeryu-obs"
-version = "4.0.0"
+version = "5.0.0"
 
 [[package]]
 name = "jeryu-ops"
-version = "4.0.0"
+version = "5.0.0"
 dependencies = [
  "jeryu-phase11-audit",
  "jeryu-phase11-core",
@@ -530,14 +530,14 @@ dependencies = [
 
 [[package]]
 name = "jeryu-phase11-audit"
-version = "4.0.0"
+version = "5.0.0"
 dependencies = [
  "jeryu-phase11-core",
 ]
 
 [[package]]
 name = "jeryu-phase11-bin"
-version = "4.0.0"
+version = "5.0.0"
 dependencies = [
  "jeryu-kernel",
  "jeryu-phase11-core",
@@ -545,11 +545,11 @@ dependencies = [
 
 [[package]]
 name = "jeryu-phase11-core"
-version = "4.0.0"
+version = "5.0.0"
 
 [[package]]
 name = "jeryu-replay-verifier"
-version = "4.0.0"
+version = "5.0.0"
 dependencies = [
  "jeryu-phase11-audit",
  "jeryu-phase11-core",
@@ -557,7 +557,7 @@ dependencies = [
 
 [[package]]
 name = "jeryu-repogate"
-version = "4.0.0"
+version = "5.0.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -569,11 +569,11 @@ dependencies = [
 
 [[package]]
 name = "jeryu-rustjet"
-version = "4.0.0"
+version = "5.0.0"
 
 [[package]]
 name = "jeryu-signing"
-version = "4.0.0"
+version = "5.0.0"
 dependencies = [
  "ed25519-dalek",
  "hex",
@@ -585,7 +585,7 @@ dependencies = [
 
 [[package]]
 name = "jeryu-signrail"
-version = "4.0.0"
+version = "5.0.0"
 dependencies = [
  "jeryu-signing",
  "serde_json",
@@ -593,7 +593,7 @@ dependencies = [
 
 [[package]]
 name = "jeryu-tenant"
-version = "4.0.0"
+version = "5.0.0"
 dependencies = [
  "jeryu-phase11-audit",
  "jeryu-phase11-core",
@@ -601,7 +601,7 @@ dependencies = [
 
 [[package]]
 name = "jeryu-wsversion"
-version = "4.0.0"
+version = "5.0.0"
 dependencies = [
  "anyhow",
  "chrono",

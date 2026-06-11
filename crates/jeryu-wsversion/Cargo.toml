@@ -22,7 +22,7 @@ serde.workspace = true
 serde_json.workspace = true
 toml.workspace = true
 jeryu-repogate = { path = "../jeryu-repogate" }
-jeryu-rustjet = { git = "https://github.com/neverhuman/jeryu-intelligence.git", tag = "jeryu-intelligence-v4.0.0-split.0", package = "jeryu-rustjet" }
+jeryu-rustjet = { git = "https://github.com/neverhuman/jeryu-intelligence.git", tag = "jeryu-intelligence-v5.0.0-split.0", package = "jeryu-rustjet" }
 
 [dev-dependencies]
 tempfile.workspace = true
