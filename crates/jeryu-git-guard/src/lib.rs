@@ -131,6 +131,10 @@ const SUBCOMMAND_FIXES: &[&str] = &[
     "only branch-local commands are allowed (status/diff/log/show/add/commit/revert/reset/restore/stash)",
     "if you reached here via a git alias, it is refused: aliases can run arbitrary commands",
 ];
+const COMMIT_VERIFY_FIXES: &[&str] = &[
+    "drop --no-verify/-n: the jankurai audit gate must run on every commit",
+    "if the gate blocked you, fix the introduced caps/findings and commit again",
+];
 
 impl GitGuardError {
     fn network(cmd: String) -> Self {
@@ -193,6 +197,15 @@ impl GitGuardError {
             "git_subcommand_denied",
             SUBCOMMAND_FIXES,
             "use a branch-local command, or ask jeryu for the operation you need",
+            cmd,
+        )
+    }
+    fn commit_unverified(cmd: String) -> Self {
+        Self::new(
+            "skip the pre-commit jankurai audit gate",
+            "git_commit_unverified_denied",
+            COMMIT_VERIFY_FIXES,
+            "remove --no-verify; resolve the audit findings instead",
             cmd,
         )
     }
@@ -276,7 +289,6 @@ const ALLOWED_LOCAL: &[&str] = &[
     "show",
     "log",
     "add",
-    "commit",
     "revert",
     "restore",
     "rm",
@@ -365,6 +377,7 @@ pub fn git_command_decision(argv: &[String], assigned_branch: &str) -> GitDecisi
         return GitDecision::Deny(GitGuardError::integration(rendered));
     }
     match sub {
+        "commit" => commit_decision(rest, rendered),
         "config" => config_decision(rest, rendered),
         "branch" => branch_decision(rest, rendered),
         "checkout" => checkout_decision(rest, assigned_branch, rendered),
@@ -383,6 +396,50 @@ fn render_command(argv: &[String]) -> String {
         s.push_str(a);
     }
     s
+}
+
+/// `git commit` is branch-local and allowed, but the wrapper runs the jankurai
+/// audit gate on it (see `bin/jeryu-git.rs`); the agent must not be able to skip
+/// that gate, so `--no-verify` / `-n` are refused. The gate runs in the wrapper
+/// (not via a repo `.git/hooks/pre-commit` the agent could edit or a
+/// `core.hooksPath` it could redirect — both already denied), so `--no-verify`
+/// would otherwise be the only bypass. For `git commit`, `-n` is the ONLY short
+/// flag using the letter `n`, so refusing any short cluster containing `n`
+/// (`-n`, `-an`, …) is exact and safe.
+fn commit_decision(rest: &[String], cmd: String) -> GitDecision {
+    for tok in rest {
+        if tok == "--" {
+            break; // end of options; the rest are pathspecs
+        }
+        let denied = tok == "--no-verify"
+            || (tok.starts_with('-') && !tok.starts_with("--") && tok.contains('n'));
+        if denied {
+            return GitDecision::Deny(GitGuardError::commit_unverified(cmd));
+        }
+    }
+    GitDecision::Allow
+}
+
+/// The git subcommand in `argv`, skipping leading global options. The wrapper
+/// uses this to decide whether to run the commit gate. Returns `None` for bare
+/// `git` / `git --version`. Mirrors the global-skip scan in
+/// [`git_command_decision`] (which has already validated the globals when the
+/// verdict is `Allow`).
+#[must_use]
+pub fn leading_subcommand(argv: &[String]) -> Option<&str> {
+    let mut idx = 0;
+    while idx < argv.len() {
+        let tok = argv[idx].as_str();
+        if !tok.starts_with('-') {
+            break;
+        }
+        if global_takes_value(tok) {
+            idx += 2;
+            continue;
+        }
+        idx += 1;
+    }
+    argv.get(idx).map(String::as_str)
 }
 
 /// Globals that inject config or redirect the repo/worktree — always refused.
@@ -671,6 +728,49 @@ mod tests {
         ] {
             assert!(decide(&cmd).is_allowed(), "expected allow: git {cmd:?}");
         }
+    }
+
+    #[test]
+    fn commit_skipping_the_audit_gate_is_denied() {
+        // --no-verify / -n (and short clusters containing n) bypass the gate.
+        for cmd in [
+            vec!["commit", "--no-verify"],
+            vec!["commit", "-n"],
+            vec!["commit", "-n", "-m", "msg"],
+            vec!["commit", "-am", "msg", "--no-verify"],
+            vec!["commit", "-an", "msg"],
+        ] {
+            let d = decide(&cmd);
+            assert!(!d.is_allowed(), "expected deny: git {cmd:?}");
+            assert_eq!(reason(&d), "git_commit_unverified_denied", "git {cmd:?}");
+        }
+        // A pathspec literally named "-n" after `--` is not a flag.
+        assert!(decide(&["commit", "-m", "msg", "--", "-n"]).is_allowed());
+    }
+
+    #[test]
+    fn commit_hookspath_injection_stays_denied() {
+        // The wrapper runs the gate, not a repo hook — but block the hook-path
+        // escapes too, belt-and-suspenders.
+        assert_eq!(
+            reason(&decide(&["-c", "core.hooksPath=/tmp", "commit", "-m", "x"])),
+            "git_global_flag_denied"
+        );
+        assert_eq!(
+            reason(&decide(&["config", "core.hooksPath", "/tmp"])),
+            "git_config_write_denied"
+        );
+    }
+
+    #[test]
+    fn leading_subcommand_skips_globals() {
+        assert_eq!(leading_subcommand(&argv(&["commit", "-m", "x"])), Some("commit"));
+        assert_eq!(
+            leading_subcommand(&argv(&["-C", "/repo", "commit", "-m", "x"])),
+            Some("commit")
+        );
+        assert_eq!(leading_subcommand(&argv(&["status"])), Some("status"));
+        assert_eq!(leading_subcommand(&argv(&["--version"])), None);
     }
 
     #[test]
