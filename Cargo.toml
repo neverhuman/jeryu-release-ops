@@ -56,7 +56,3 @@ missing_docs = "allow"
 
 [workspace.lints.clippy]
 pedantic = { level = "allow", priority = -1 }
-
-# Local split development patches. Release builds consume the pinned Git tags above.
-[patch."https://github.com/neverhuman/jeryu-intelligence.git"]
-jeryu-rustjet = { path = "../jeryu-intelligence/crates/jeryu-rustjet" }
