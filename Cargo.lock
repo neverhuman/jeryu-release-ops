@@ -570,6 +570,7 @@ dependencies = [
 [[package]]
 name = "jeryu-rustjet"
 version = "5.0.0"
+source = "git+https://github.com/neverhuman/jeryu-intelligence.git?tag=jeryu-intelligence-v5.0.0-split.0#de5b22d50e21b9cac3efd239ea2ec2eda1df6327"
 
 [[package]]
 name = "jeryu-signing"
