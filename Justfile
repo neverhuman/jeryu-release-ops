@@ -17,5 +17,8 @@ security:
 artifact-support:
   ./ops/ci/artifact_support.sh
 
+redline-consumer-test:
+  cargo test --locked -p jeryu-obs --test redline_consumer_contract
+
 profile:
   printf '%s\n' "rust-workspace"

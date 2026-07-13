@@ -69,3 +69,8 @@ paths stable where practical so ownership remains auditable.
 - `just score`
 - `just security`
 - `just artifact-support`
+- `just redline-consumer-test`
+
+`ops/ci/redline-consumer.sh` emits checksummed Redline compatibility evidence
+only from clean, forge-equal `main`, a passing family receipt, and the exact
+immutable engine tag resolved by `Cargo.lock`.
