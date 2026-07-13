@@ -13,6 +13,8 @@
     "Justfile": "workspace",
     "LICENSE": "workspace",
     "README.md": "docs",
+    "RELEASE_PROCESS.md": "release",
+    "ROLLBACK.md": "release",
     "VERSION": "release",
     "agent/": "agent",
     "bench/": "jeryu-release-ops",

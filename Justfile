@@ -20,5 +20,7 @@ artifact-support:
 redline-consumer-test:
   cargo test --locked -p jeryu-obs --test redline_consumer_contract
 
+release-readiness: fast check score security artifact-support redline-consumer-test
+
 profile:
   printf '%s\n' "rust-workspace"

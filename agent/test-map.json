@@ -65,6 +65,16 @@
       "lane": "check",
       "purpose": "verify root navigation remains current"
     },
+    "RELEASE_PROCESS.md": {
+      "command": "just release-readiness",
+      "lane": "release",
+      "purpose": "verify release gates and immutable Redline evidence policy"
+    },
+    "ROLLBACK.md": {
+      "command": "just release-readiness",
+      "lane": "release",
+      "purpose": "verify rollback preserves immutable refs and fail-closed proof state"
+    },
     "VERSION": {
       "command": "just score",
       "lane": "score",
