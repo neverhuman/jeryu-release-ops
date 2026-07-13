@@ -299,6 +299,11 @@
       "command": "just fast && just check && just score",
       "lane": "ci",
       "purpose": "verify local ops guidance and CI wrappers stay reproducible"
+    },
+    "schemas/": {
+      "command": "just check && just score",
+      "lane": "check",
+      "purpose": "verify closed release-receipt schemas are parseable and audit-visible"
     }
   },
   "workspace": "jeryu-release-ops"

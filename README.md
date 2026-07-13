@@ -1,10 +1,33 @@
 # jeryu-release-ops
 
+[![Jankurai score: 88/100](https://img.shields.io/badge/Jankurai-88%2F100-brightgreen)](ops/ci/score.sh)
+
 Release, signing, governance, observability, and compliance tooling.
 
 This repository was seeded from Jeryu source commit `cbecf7caa0e932c76a341b2521e66e911233860d` by
 `ops/split/materialize.py`. It is part of the seven-repo Jeryu split family and keeps source
 paths stable where practical so ownership remains auditable.
+
+Repository-specific agent instructions and ownership boundaries start in
+[`AGENTS.md`](AGENTS.md).
+
+## Getting Started
+
+Install the Rust toolchain declared by `rust-toolchain.toml` and
+[`just`](https://github.com/casey/just), then run the deterministic local gate:
+
+```bash
+just fast
+```
+
+Before proposing release evidence, run the complete source-readiness lane:
+
+```bash
+just release-readiness
+```
+
+That lane is non-promoting: deployment and production mutation remain owned by
+`jeryu-deploy`.
 
 ## Owned Cargo Packages
 

@@ -53,6 +53,7 @@
     "ops/security/": "jeryu-release-ops",
     "ops/signrail-verify/": "jeryu-release-ops",
     "ops/upgrade/": "jeryu-release-ops",
+    "schemas/": "jeryu-release-ops",
     "repos.manifest.toml": "split",
     "rust-toolchain.toml": "workspace",
     "scripts/": "ops",

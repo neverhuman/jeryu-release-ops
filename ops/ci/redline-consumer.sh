@@ -8,6 +8,7 @@ redline_policy=""
 output=""
 engine_tag="redline-core-v4.1.0-jain.3"
 tool_version="jeryu-redline-consumer/v1"
+evidence_schema="$root/schemas/redline-consumer-evidence.schema.json"
 
 die() {
   printf 'redline-consumer: %s\n' "$*" >&2
@@ -50,6 +51,7 @@ done
 [[ -f "$family_ci" && -f "$family_ci.sha256" ]] || die "family CI receipt or sidecar is missing"
 [[ -f "$redline_manifest" ]] || die "Redline manifest is missing"
 [[ -f "$redline_policy" ]] || die "Redline policy is missing"
+[[ -f "$evidence_schema" ]] || die "consumer evidence schema is missing"
 
 branch="$(git -C "$root" branch --show-current)"
 [[ "$branch" == "main" ]] || die "evidence must be generated from reviewed main, got $branch"
@@ -109,6 +111,24 @@ jq -n \
   --arg tool_version "$tool_version" \
   '{schema_version:$schema_version,consumer:$consumer,family:$family,generated_at:$generated_at,status:$status,source_commit:$source_commit,required_check:$required_check,engine_tag:$engine_tag,engine_commit:$engine_commit,proof_lock_id:$proof_lock_id,family_ci_receipt_sha256:$family_ci_receipt_sha256,manifest_sha256:$manifest_sha256,policy_sha256:$policy_sha256,consumer_manifest_sha256:$consumer_manifest_sha256,consumer_policy_sha256:$consumer_policy_sha256,test_log:$test_log,test_log_sha256:$test_log_sha256,tool_version:$tool_version}' \
   >"$output"
+
+jq -e --slurpfile schema "$evidence_schema" '
+  . as $evidence
+  | $schema[0] as $contract
+  | (($evidence | keys | sort) == ($contract.required | sort))
+    and ([
+      $contract.properties
+      | to_entries[]
+      | select(.value.const != null) as $property
+      | $evidence[$property.key] == $property.value.const
+    ] | all)
+    and ([
+      $contract.properties
+      | to_entries[]
+      | select(.value.pattern != null) as $property
+      | ($evidence[$property.key] | type == "string" and test($property.value.pattern))
+    ] | all)
+' "$output" >/dev/null || die "generated evidence does not match its closed schema"
 
 output_digest="$(sha256sum "$output" | awk '{ print $1 }')"
 printf '%s  %s\n' "$output_digest" "$(basename "$output")" >"$output.sha256"

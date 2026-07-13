@@ -34,6 +34,23 @@ if "jeryu" not in data.get("required_repos", []):
     raise SystemExit("repos.manifest.toml must require the public portal repo")
 PY
 fi
+if [[ -d schemas ]]; then
+  python3 - <<'PY'
+import json
+from pathlib import Path
+
+for path in sorted(Path("schemas").glob("*.schema.json")):
+    schema = json.loads(path.read_text())
+    if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
+        raise SystemExit(f"{path}: unsupported or missing JSON Schema dialect")
+    if schema.get("type") != "object" or schema.get("additionalProperties") is not False:
+        raise SystemExit(f"{path}: receipt schemas must be closed objects")
+    properties = set(schema.get("properties", {}))
+    required = set(schema.get("required", []))
+    if not properties or properties != required:
+        raise SystemExit(f"{path}: every receipt property must be required")
+PY
+fi
 for script in scripts/*.sh ops/ci/*.sh; do
   [[ -e "$script" ]] || continue
   bash -n "$script"
