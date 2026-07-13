@@ -45,8 +45,14 @@
     "family_ci_receipt_sha256": { "$ref": "#/$defs/sha256" },
     "manifest_sha256": { "$ref": "#/$defs/sha256" },
     "policy_sha256": { "$ref": "#/$defs/sha256" },
-    "consumer_manifest_sha256": { "$ref": "#/$defs/sha256" },
-    "consumer_policy_sha256": { "$ref": "#/$defs/sha256" },
+    "consumer_manifest_sha256": {
+      "description": "SHA-256 of the canonical Jeryu split-family manifest supplied by the operator.",
+      "$ref": "#/$defs/sha256"
+    },
+    "consumer_policy_sha256": {
+      "description": "SHA-256 of jeryu-release-ops/agent/audit-policy.toml at source_commit.",
+      "$ref": "#/$defs/sha256"
+    },
     "test_log": { "type": "string", "pattern": "^[^/]+\\.test\\.log$" },
     "test_log_sha256": { "$ref": "#/$defs/sha256" },
     "tool_version": { "const": "jeryu-redline-consumer/v1" }

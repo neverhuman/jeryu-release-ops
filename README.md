@@ -96,4 +96,7 @@ That lane is non-promoting: deployment and production mutation remain owned by
 
 `ops/ci/redline-consumer.sh` emits checksummed Redline compatibility evidence
 only from clean, forge-equal `main`, a passing family receipt, and the exact
-immutable engine tag resolved by `Cargo.lock`.
+immutable engine tag resolved by `Cargo.lock`. The operator must also pass the
+canonical Jeryu split manifest with `--consumer-manifest`; the script hashes it
+alongside this repository's `agent/audit-policy.toml` instead of inferring a
+manifest from the consumer checkout.

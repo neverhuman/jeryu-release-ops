@@ -5,6 +5,8 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 family_ci=""
 redline_manifest=""
 redline_policy=""
+consumer_manifest=""
+consumer_policy="$root/agent/audit-policy.toml"
 output=""
 engine_tag="redline-core-v4.1.0-jain.3"
 tool_version="jeryu-redline-consumer/v1"
@@ -29,6 +31,14 @@ while [[ $# -gt 0 ]]; do
       redline_policy="${2:?--redline-policy requires a path}"
       shift 2
       ;;
+    --consumer-manifest)
+      consumer_manifest="${2:?--consumer-manifest requires a path}"
+      shift 2
+      ;;
+    --consumer-policy)
+      consumer_policy="${2:?--consumer-policy requires a path}"
+      shift 2
+      ;;
     --output)
       output="${2:?--output requires a path}"
       shift 2
@@ -42,16 +52,39 @@ done
 [[ -n "$family_ci" ]] || die "--family-ci is required"
 [[ -n "$redline_manifest" ]] || die "--redline-manifest is required"
 [[ -n "$redline_policy" ]] || die "--redline-policy is required"
+[[ -n "$consumer_manifest" ]] || die "--consumer-manifest is required"
 [[ -n "$output" ]] || die "--output is required"
 
-for command in cargo date git jq sha256sum; do
+for command in cargo date git jq python3 sha256sum; do
   command -v "$command" >/dev/null 2>&1 || die "required command is unavailable: $command"
 done
 
 [[ -f "$family_ci" && -f "$family_ci.sha256" ]] || die "family CI receipt or sidecar is missing"
 [[ -f "$redline_manifest" ]] || die "Redline manifest is missing"
 [[ -f "$redline_policy" ]] || die "Redline policy is missing"
+[[ -f "$consumer_manifest" ]] || die "Jeryu consumer manifest is missing"
+[[ -f "$consumer_policy" ]] || die "Jeryu consumer policy is missing"
 [[ -f "$evidence_schema" ]] || die "consumer evidence schema is missing"
+
+python3 - "$consumer_manifest" "$consumer_policy" <<'PY' || die "Jeryu manifest or policy identity is invalid"
+import sys
+from pathlib import Path
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
+
+manifest = tomllib.loads(Path(sys.argv[1]).read_text())
+policy = tomllib.loads(Path(sys.argv[2]).read_text())
+if manifest.get("repo_family") != "jeryu-split":
+    raise SystemExit("consumer manifest is not the Jeryu split authority")
+repos = manifest.get("repo", [])
+if not any(repo.get("name") == "jeryu-release-ops" for repo in repos):
+    raise SystemExit("consumer manifest does not include jeryu-release-ops")
+if policy.get("workspace") != "jeryu-release-ops":
+    raise SystemExit("consumer policy does not bind jeryu-release-ops")
+PY
 
 branch="$(git -C "$root" branch --show-current)"
 [[ "$branch" == "main" ]] || die "evidence must be generated from reviewed main, got $branch"
@@ -84,8 +117,8 @@ fi
 
 generated_at="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 policy_digest="$(sha256sum "$redline_policy" | awk '{ print $1 }')"
-consumer_manifest_digest="$(sha256sum "$root/repos.manifest.toml" | awk '{ print $1 }')"
-consumer_policy_digest="$(sha256sum "$root/ops/ci/pr-ci.sh" | awk '{ print $1 }')"
+consumer_manifest_digest="$(sha256sum "$consumer_manifest" | awk '{ print $1 }')"
+consumer_policy_digest="$(sha256sum "$consumer_policy" | awk '{ print $1 }')"
 test_log_digest="$(sha256sum "$test_log" | awk '{ print $1 }')"
 test_log_record="$(basename "$test_log")"
 proof_lock_id="redline-proof/v2/4.1.0/$engine_commit"

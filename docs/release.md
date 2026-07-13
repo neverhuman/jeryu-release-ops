@@ -29,6 +29,18 @@ contract before writing evidence, a test log, and checksum sidecar. A branch,
 floating ref, waiver, manually asserted check, or historical manifest is not
 release evidence.
 
+Pass the canonical Jeryu family manifest explicitly; it is family authority and
+is intentionally not copied into this source repository:
+
+```bash
+ops/ci/redline-consumer.sh \
+  --family-ci /path/to/redline-family-ci.json \
+  --redline-manifest /path/to/redline/repos.manifest.toml \
+  --redline-policy /path/to/redline/agent/audit-policy.toml \
+  --consumer-manifest /home/ubuntu/jeryu-split/repos.manifest.toml \
+  --output /path/to/jeryu-consumer.json
+```
+
 ## Rollback
 
 Rollback uses the previous known-good split tag and its artifact evidence. Do
