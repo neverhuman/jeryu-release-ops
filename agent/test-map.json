@@ -271,9 +271,9 @@
       "purpose": "verify local Rust toolchain metadata remains pinned"
     },
     "scripts/": {
-      "command": "just check",
-      "lane": "check",
-      "purpose": "verify helper scripts parse and stay locally reproducible"
+      "command": "scripts/ci-local.sh required",
+      "lane": "required",
+      "purpose": "verify the host-required entrypoint executes complete release readiness"
     },
     "tests/": {
       "command": "just check && just score",
