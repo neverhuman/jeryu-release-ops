@@ -7,6 +7,13 @@ Use the local CI entrypoints before pushing changes:
 - `just score`
 - `just security`
 - `just artifact-support`
+- `just redline-consumer-test`
+
+A Redline dependency revision additionally requires `just release-readiness`
+and `ops/ci/pr-ci.sh`. After merge, the evidence producer rechecks the clean
+forge `main`, family-receipt checksum and manifest identity, locked engine
+commit, transactional durability, checkpoint, and reopen before it can emit a
+consumer receipt.
 
 `scripts/ci-local.sh` delegates to the same `ops/ci/*.sh` lanes used by the
 GitHub workflow. `scripts/ci-doctor.sh` checks the required local tools.

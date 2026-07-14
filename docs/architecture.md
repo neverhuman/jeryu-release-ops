@@ -11,6 +11,9 @@ surfaces and consume sibling crates from pinned public Git tags.
 - Profile: `rust-workspace`
 - Required check: `jeryu-release-ops/required`
 - Local release source of truth: `agent/boundaries.toml`
+- Redline runtime: immutable `redline-core-v4.1.0-jain.4` at protected commit
+  `3567bdced0ca1fe3671c9ebda876c914e2fc2c9e`; the locked Rust dependency and
+  consumer producer must resolve that same identity.
 
 ## Owned Surface
 
