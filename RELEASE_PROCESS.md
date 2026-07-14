@@ -9,8 +9,8 @@ artifact-support, and Redline consumer contract lanes.
 The Redline compatibility producer is `ops/ci/redline-consumer.sh`. It may run
 only from clean, forge-equal `main` after a fresh Redline family receipt has
 verified every immutable family tag. The committed lock must resolve
-`redline-core-v4.1.0-jain.3` to
-`7137a1ee2d04be4eb6931d99ff78b8a52c827900`; the producer then executes the
+`redline-core-v4.1.0-jain.4` to
+`3567bdced0ca1fe3671c9ebda876c914e2fc2c9e`; the producer then executes the
 transaction, rollback, checkpoint, and reopen contract and writes the evidence,
 test log, and checksum sidecar together.
 

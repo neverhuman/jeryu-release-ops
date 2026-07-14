@@ -8,7 +8,7 @@ redline_policy=""
 consumer_manifest=""
 consumer_policy="$root/agent/audit-policy.toml"
 output=""
-engine_tag="redline-core-v4.1.0-jain.3"
+engine_tag="redline-core-v4.1.0-jain.4"
 tool_version="jeryu-redline-consumer/v1"
 evidence_schema="$root/schemas/redline-consumer-evidence.schema.json"
 

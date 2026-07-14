@@ -20,8 +20,8 @@ Before a release or split tag is promoted:
 ## Redline Consumer Evidence
 
 The reviewed Redline dependency is
-`redline-core-v4.1.0-jain.3` at
-`7137a1ee2d04be4eb6931d99ff78b8a52c827900`. After this dependency and its
+`redline-core-v4.1.0-jain.4` at
+`3567bdced0ca1fe3671c9ebda876c914e2fc2c9e`. After this dependency and its
 contract merge to clean, forge-equal `main`, `ops/ci/redline-consumer.sh`
 accepts only a fresh checksummed family receipt with matching manifest and
 policy hashes. It runs the real transaction, rollback, checkpoint, and reopen

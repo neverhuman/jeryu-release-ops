@@ -993,7 +993,7 @@ dependencies = [
 [[package]]
 name = "redlinedb"
 version = "4.1.0"
-source = "git+http://127.0.0.1:8787/git/jeryu/redline-core.git?tag=redline-core-v4.1.0-jain.3#7137a1ee2d04be4eb6931d99ff78b8a52c827900"
+source = "git+http://127.0.0.1:8787/git/jeryu/redline-core.git?tag=redline-core-v4.1.0-jain.4#3567bdced0ca1fe3671c9ebda876c914e2fc2c9e"
 dependencies = [
  "libc",
  "num_cpus",
@@ -1008,12 +1008,12 @@ dependencies = [
 [[package]]
 name = "redlinedb-domain"
 version = "4.1.0"
-source = "git+http://127.0.0.1:8787/git/jeryu/redline-core.git?tag=redline-core-v4.1.0-jain.3#7137a1ee2d04be4eb6931d99ff78b8a52c827900"
+source = "git+http://127.0.0.1:8787/git/jeryu/redline-core.git?tag=redline-core-v4.1.0-jain.4#3567bdced0ca1fe3671c9ebda876c914e2fc2c9e"
 
 [[package]]
 name = "redlinedb-kernel"
 version = "4.1.0"
-source = "git+http://127.0.0.1:8787/git/jeryu/redline-core.git?tag=redline-core-v4.1.0-jain.3#7137a1ee2d04be4eb6931d99ff78b8a52c827900"
+source = "git+http://127.0.0.1:8787/git/jeryu/redline-core.git?tag=redline-core-v4.1.0-jain.4#3567bdced0ca1fe3671c9ebda876c914e2fc2c9e"
 dependencies = [
  "ahash",
  "arc-swap",
@@ -1032,7 +1032,7 @@ dependencies = [
 [[package]]
 name = "redlinedb-sql"
 version = "4.1.0"
-source = "git+http://127.0.0.1:8787/git/jeryu/redline-core.git?tag=redline-core-v4.1.0-jain.3#7137a1ee2d04be4eb6931d99ff78b8a52c827900"
+source = "git+http://127.0.0.1:8787/git/jeryu/redline-core.git?tag=redline-core-v4.1.0-jain.4#3567bdced0ca1fe3671c9ebda876c914e2fc2c9e"
 dependencies = [
  "ahash",
  "arc-swap",
