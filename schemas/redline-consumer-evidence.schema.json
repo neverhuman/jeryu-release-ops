@@ -34,10 +34,14 @@
     "source_commit": { "$ref": "#/$defs/gitCommit" },
     "required_check": { "const": "jeryu-split/redline-consumer" },
     "engine_tag": {
+      "description": "Immutable Redline tag selected by the reviewed producer and present in the bound family CI receipt.",
       "type": "string",
       "pattern": "^redline-core-v[0-9]+\\.[0-9]+\\.[0-9]+-jain\\.[0-9]+$"
     },
-    "engine_commit": { "$ref": "#/$defs/gitCommit" },
+    "engine_commit": {
+      "description": "Exact commit resolved jointly by Cargo.lock, engine_tag, and the passing family CI receipt.",
+      "$ref": "#/$defs/gitCommit"
+    },
     "proof_lock_id": {
       "type": "string",
       "pattern": "^redline-proof/v[0-9]+/[0-9]+\\.[0-9]+\\.[0-9]+/[0-9a-f]{40}$"
