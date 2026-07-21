@@ -17,6 +17,7 @@ const AUTHORITY_PATH: &str =
 const REDLINE_ROOT: &str = "/home/ubuntu/jain-split/jain-redline";
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Manifest {
     schema_version: String,
     repo_family: String,
@@ -34,11 +35,13 @@ struct Manifest {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct NestedFamilies {
     redline: RedlineFamily,
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct RedlineFamily {
     family: String,
     consumer: String,
@@ -51,6 +54,7 @@ struct RedlineFamily {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Repository {
     name: String,
     path: String,
@@ -61,7 +65,21 @@ struct Repository {
     current_tag: String,
     inventory_status: String,
     runtime_authority: String,
+    product_name: Option<String>,
 }
+
+const PRODUCT_AUTHORITIES: [(&str, &str, Option<&str>); 10] = [
+    ("jeryu", "library", None),
+    ("jeryu-cache", "library", None),
+    ("jeryu-ci-runner", "shadow-only", None),
+    ("jeryu-core", "library", None),
+    ("jeryu-deploy", "shadow-only", None),
+    ("jeryu-intelligence", "library", None),
+    ("jeryu-jira", "library", Some("Work")),
+    ("jeryu-tool", "library", None),
+    ("jeryu-tool-finder", "library", None),
+    ("jeryu-web", "retirement-pending", None),
+];
 
 /// Validate the authority manifest rooted at `root`.
 pub fn run_family_manifest(root: &Path) -> Result<GateOutcome> {
@@ -94,14 +112,28 @@ fn validate(manifest: &Manifest) -> Result<()> {
     if manifest.split_root != SPLIT_ROOT || manifest.manifest_authority != AUTHORITY_PATH {
         bail!("Jeryu split root or authority path is not canonical");
     }
-    if manifest.repo.len() != 10 {
-        bail!("Jeryu authority must declare ten product rows plus its control plane");
+    if manifest.control_plane.name != "jeryu-release-ops"
+        || manifest.control_plane.runtime_authority != "control-plane"
+        || manifest.control_plane.product_name.is_some()
+    {
+        bail!("Jeryu authority must use jeryu-release-ops as its control plane");
     }
 
     let mut names = BTreeSet::new();
     let mut paths = BTreeSet::new();
     let mut slugs = BTreeSet::new();
     let mut remotes = BTreeSet::new();
+    for repo in &manifest.repo {
+        let (_, expected_runtime, expected_product_name) = PRODUCT_AUTHORITIES
+            .iter()
+            .find(|(name, _, _)| *name == repo.name)
+            .ok_or_else(|| anyhow::anyhow!("{} is not a governed Jeryu repository", repo.name))?;
+        if repo.runtime_authority != *expected_runtime
+            || repo.product_name.as_deref() != *expected_product_name
+        {
+            bail!("{} has the wrong runtime or product identity", repo.name);
+        }
+    }
     for repo in manifest
         .repo
         .iter()
@@ -118,6 +150,33 @@ fn validate(manifest: &Manifest) -> Result<()> {
             );
         }
     }
+    let retired = manifest
+        .retired_histories
+        .iter()
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    if retired.len() != manifest.retired_histories.len()
+        || (!retired.is_empty() && retired != BTreeSet::from(["jeryu-web".to_owned()]))
+    {
+        bail!("retired_histories may contain only the completed jeryu-web retirement");
+    }
+
+    let mut expected_names = PRODUCT_AUTHORITIES
+        .iter()
+        .map(|(name, _, _)| (*name).to_owned())
+        .collect::<BTreeSet<_>>();
+    if retired.contains("jeryu-web") {
+        expected_names.remove("jeryu-web");
+    }
+    let product_names = manifest
+        .repo
+        .iter()
+        .map(|repo| repo.name.clone())
+        .collect::<BTreeSet<_>>();
+    if product_names.len() != manifest.repo.len() || product_names != expected_names {
+        bail!("Jeryu authority product rows do not match the governed family inventory");
+    }
+
     let required = manifest
         .required_repos
         .iter()
@@ -126,11 +185,7 @@ fn validate(manifest: &Manifest) -> Result<()> {
     if required.len() != manifest.required_repos.len() || required != names {
         bail!("required_repos must exactly match active product and control-plane identities");
     }
-    if manifest
-        .retired_histories
-        .iter()
-        .any(|retired| names.contains(retired))
-    {
+    if retired.iter().any(|retired| names.contains(retired)) {
         bail!("an active repository cannot also be a retired history");
     }
 
@@ -166,14 +221,26 @@ fn validate_repository(repo: &Repository) -> Result<()> {
             repo.name
         );
     }
-    if !matches!(
-        repo.runtime_authority.as_str(),
-        "library" | "shadow-only" | "retirement-pending" | "control-plane"
-    ) {
-        bail!("{} has unsupported runtime authority", repo.name);
-    }
     let tag_prefix = format!("{}-v5.", repo.name);
-    if !repo.current_tag.starts_with(&tag_prefix) || !repo.current_tag.contains("-split.") {
+    let Some(version_and_revision) = repo.current_tag.strip_prefix(&tag_prefix) else {
+        bail!(
+            "{} must retain its immutable v5 split-tag lineage",
+            repo.name
+        );
+    };
+    let Some((version, revision)) = version_and_revision.split_once("-split.") else {
+        bail!(
+            "{} must retain its immutable v5 split-tag lineage",
+            repo.name
+        );
+    };
+    if version.split('.').count() != 2
+        || version
+            .split('.')
+            .any(|part| part.is_empty() || !part.bytes().all(|byte| byte.is_ascii_digit()))
+        || revision.is_empty()
+        || !revision.bytes().all(|byte| byte.is_ascii_digit())
+    {
         bail!(
             "{} must retain its immutable v5 split-tag lineage",
             repo.name
@@ -227,5 +294,57 @@ mod tests {
         let mut retired = canonical();
         retired.retired_histories.push("jeryu-web".to_owned());
         assert!(validate(&retired).is_err());
+    }
+
+    #[test]
+    fn rejects_unknown_fields_and_self_consistent_identity_substitution() {
+        let raw = include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../repos.manifest.toml"
+        ));
+        assert!(toml::from_str::<Manifest>(&format!("unknown = true\n{raw}")).is_err());
+        assert!(toml::from_str::<Manifest>(&format!("{raw}\nunknown = true\n")).is_err());
+
+        let mut substituted = canonical();
+        let repo = &mut substituted.repo[0];
+        repo.name = "jeryu-unknown".to_owned();
+        repo.path = format!("{SPLIT_ROOT}/jeryu-unknown");
+        repo.jeryu_slug = "jeryu/jeryu-unknown".to_owned();
+        repo.remote = "http://127.0.0.1:8787/git/jeryu/jeryu-unknown.git".to_owned();
+        repo.required_check = "jeryu-unknown/required".to_owned();
+        repo.current_tag = "jeryu-unknown-v5.0.0-split.0".to_owned();
+        substituted.required_repos[0] = "jeryu-unknown".to_owned();
+        assert!(validate(&substituted).is_err());
+    }
+
+    #[test]
+    fn accepts_only_the_governed_web_retirement_transition() {
+        let mut retired = canonical();
+        retired.repo.retain(|repo| repo.name != "jeryu-web");
+        retired.required_repos.retain(|repo| repo != "jeryu-web");
+        retired.retired_histories.push("jeryu-web".to_owned());
+        validate(&retired).unwrap();
+
+        retired.retired_histories[0] = "jeryu-core".to_owned();
+        assert!(validate(&retired).is_err());
+    }
+
+    #[test]
+    fn rejects_control_plane_work_and_malformed_tag_identity() {
+        let mut control = canonical();
+        control.control_plane.product_name = Some("Work".to_owned());
+        assert!(validate(&control).is_err());
+
+        let mut work = canonical();
+        work.repo
+            .iter_mut()
+            .find(|repo| repo.name == "jeryu-jira")
+            .unwrap()
+            .product_name = Some("Jira".to_owned());
+        assert!(validate(&work).is_err());
+
+        let mut tag = canonical();
+        tag.repo[0].current_tag = "jeryu-v5.latest-split.next".to_owned();
+        assert!(validate(&tag).is_err());
     }
 }
