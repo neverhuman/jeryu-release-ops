@@ -4,6 +4,12 @@
 
 Release, signing, governance, observability, and compliance tooling.
 
+This repository is also the single authority for the independently released
+Jeryu family. [`repos.manifest.toml`](repos.manifest.toml) binds the exact
+`/home/ubuntu/jain-split/jeryu-split` root, `jeryu/*` forge identities, v5 tag
+lineage, and the canonical sibling `jain-redline` dependency. Container and
+portal manifests are projections of this authority, not competing sources.
+
 This repository was seeded from Jeryu source commit `cbecf7caa0e932c76a341b2521e66e911233860d` by
 `ops/split/materialize.py`. It is part of the seven-repo Jeryu split family and keeps source
 paths stable where practical so ownership remains auditable.

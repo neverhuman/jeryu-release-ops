@@ -66,6 +66,8 @@ enum Command {
     },
     /// Verify hosted workflows remain thin wrappers around agent/ci-lanes.toml.
     CiLanesCheck,
+    /// Validate the canonical Jeryu split-family authority manifest.
+    FamilyManifest,
     /// List commands from agent/ci-lanes.toml for shell wrappers.
     CiLanesList {
         /// Only include lanes marked full=true.
@@ -90,6 +92,7 @@ fn main() -> Result<ExitCode> {
             run_affected_plan(root, &base, &out, workers)?
         }
         Command::CiLanesCheck => jeryu_repogate::run_ci_lanes_check(root)?,
+        Command::FamilyManifest => jeryu_repogate::run_family_manifest(root)?,
         Command::CiLanesList { full, json } => jeryu_repogate::run_ci_lanes_list(root, full, json)?,
     };
 
