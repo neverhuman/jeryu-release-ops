@@ -43,4 +43,5 @@ for script in scripts/*.sh ops/ci/*.sh; do
   [[ -e "$script" ]] || continue
   bash -n "$script"
 done
+bash ops/ci/test-governed-jankurai-path.sh
 printf 'check ok: %s\n' "$(pwd)"
