@@ -18,7 +18,7 @@ fn write_minimal_repo(root: &Path, workflow_extra: &str, lane_command: &str) {
         r#"
 schema_version = 1
 worker_count = 40
-jankurai_version = "jankurai 1.6.10"
+jankurai_version = "jankurai 1.6.11"
 allowed_setup_commands = [
   '''git init .
 git remote add origin "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
