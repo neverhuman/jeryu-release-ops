@@ -28,21 +28,24 @@ require_tool() {
 require_jankurai() {
   local mode=receipt-bound
   local expected_broker="/opt/jain-ci/authority/release-bin/jankurai"
-  local bin normalized resolved actual actual_sha receipt receipt_digest receipt_sha install_root
+  local expected_governed="/home/ubuntu/.jeryu/bin/jankurai"
+  local bin bin_dir governed_root normalized resolved actual actual_sha receipt receipt_digest receipt_sha
   local expected_test=false expected_verification=release-authoritative
   local expected_governance=governed expected_protected=true
   local expected_protection=immutable-main-v1 found_receipt=0
   local -a receipt_candidates=()
-  resolved="$(command -v jankurai 2>/dev/null || true)"
   if [[ "${JAIN_RELEASE_CI:-0}" == "1" ]]; then
     mode=release-broker
+    resolved="$(command -v jankurai 2>/dev/null || true)"
     if [[ "${resolved}" != "${expected_broker}" ]]; then
       printf 'release broker Jankurai path mismatch: expected %s, resolved %s\n' \
         "${expected_broker}" "${resolved:-missing}" >&2
       exit 1
     fi
+    bin="${resolved}"
+  else
+    bin="${JERYU_GOVERNED_JANKURAI_BIN:-${expected_governed}}"
   fi
-  bin="${resolved}"
   if [[ "${bin}" != /* || ! -f "${bin}" || -L "${bin}" || ! -x "${bin}" ]]; then
     printf 'governed jankurai must be an absolute executable regular file: %s\n' "${bin}" >&2
     exit 1
@@ -57,6 +60,16 @@ require_jankurai() {
     printf 'release broker Jankurai custody mismatch: expected mode 0555 and one link at %s\n' \
       "${bin}" >&2
     exit 1
+  fi
+  if [[ "${mode}" != "release-broker" ]]; then
+    bin_dir="$(dirname "${bin}")"
+    export PATH="${bin_dir}:${PATH}"
+    resolved="$(command -v jankurai 2>/dev/null || true)"
+    if [[ "${resolved}" != "${bin}" ]]; then
+      printf 'governed jankurai shadowed: expected %s, resolved %s\n' \
+        "${bin}" "${resolved:-missing}" >&2
+      exit 1
+    fi
   fi
   actual="$("${bin}" --version 2>/dev/null || true)"
   actual_sha="$(sha256sum "${bin}" 2>/dev/null | awk '{print $1}')"
@@ -86,9 +99,13 @@ require_jankurai() {
     receipt_candidates=()
   elif [[ -n "${JERYU_JANKURAI_RECEIPT:-}" ]]; then
     receipt_candidates=("${JERYU_JANKURAI_RECEIPT}")
+  elif [[ "${bin}" == "${expected_governed}" ]]; then
+    governed_root="$(dirname "$(dirname "${expected_governed}")")"
+    receipt_candidates=("${governed_root}"/receipts/jankurai/sha256/*.json)
   else
-    install_root="$(dirname "$(dirname "${bin}")")"
-    receipt_candidates=("${install_root}"/receipts/jankurai/sha256/*.json)
+    printf 'non-governed jankurai requires an explicit installation receipt: %s\n' \
+      "${bin}" >&2
+    exit 1
   fi
   for receipt in "${receipt_candidates[@]}"; do
     [[ -f "${receipt}" ]] || continue
