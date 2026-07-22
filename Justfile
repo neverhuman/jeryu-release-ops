@@ -19,6 +19,7 @@ artifact-support:
 
 redline-consumer-test:
   cargo test --locked -p jeryu-obs --test redline_consumer_contract
+  bash ops/ci/redline-consumer-authority-test.sh
 
 release-readiness: fast check score security artifact-support redline-consumer-test
 

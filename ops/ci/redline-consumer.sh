@@ -55,7 +55,7 @@ done
 [[ -n "$consumer_manifest" ]] || die "--consumer-manifest is required"
 [[ -n "$output" ]] || die "--output is required"
 
-for command in cargo date git jq python3 sha256sum; do
+for command in cargo date git jq python3 realpath sha256sum; do
   command -v "$command" >/dev/null 2>&1 || die "required command is unavailable: $command"
 done
 
@@ -66,7 +66,16 @@ done
 [[ -f "$consumer_policy" ]] || die "Jeryu consumer policy is missing"
 [[ -f "$evidence_schema" ]] || die "consumer evidence schema is missing"
 
-python3 - "$consumer_manifest" "$consumer_policy" <<'PY' || die "Jeryu manifest or policy identity is invalid"
+canonical_consumer_manifest="$(realpath -e "$root/repos.manifest.toml")"
+provided_consumer_manifest="$(realpath -e "$consumer_manifest")"
+[[ "$provided_consumer_manifest" == "$canonical_consumer_manifest" ]] \
+  || die "consumer manifest path is not the canonical Jeryu authority"
+
+cargo run --locked --quiet --manifest-path "$root/Cargo.toml" \
+  -p jeryu-repogate -- --root "$root" family-manifest >/dev/null \
+  || die "Jeryu manifest authority is invalid"
+
+python3 - "$consumer_policy" <<'PY' || die "Jeryu consumer policy identity is invalid"
 import sys
 from pathlib import Path
 
@@ -75,13 +84,7 @@ try:
 except ModuleNotFoundError:
     import tomli as tomllib
 
-manifest = tomllib.loads(Path(sys.argv[1]).read_text())
-policy = tomllib.loads(Path(sys.argv[2]).read_text())
-if manifest.get("repo_family") != "jeryu-split":
-    raise SystemExit("consumer manifest is not the Jeryu split authority")
-repos = manifest.get("repo", [])
-if not any(repo.get("name") == "jeryu-release-ops" for repo in repos):
-    raise SystemExit("consumer manifest does not include jeryu-release-ops")
+policy = tomllib.loads(Path(sys.argv[1]).read_text())
 if policy.get("workspace") != "jeryu-release-ops":
     raise SystemExit("consumer policy does not bind jeryu-release-ops")
 PY

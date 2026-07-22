@@ -11,7 +11,7 @@ lineage, and the canonical sibling `jain-redline` dependency. Container and
 portal manifests are projections of this authority, not competing sources.
 
 This repository was seeded from Jeryu source commit `cbecf7caa0e932c76a341b2521e66e911233860d` by
-`ops/split/materialize.py`. It is part of the seven-repo Jeryu split family and keeps source
+`ops/split/materialize.py`. It is part of the 11-repository Jeryu split family and keeps source
 paths stable where practical so ownership remains auditable.
 
 Repository-specific agent instructions and ownership boundaries start in
