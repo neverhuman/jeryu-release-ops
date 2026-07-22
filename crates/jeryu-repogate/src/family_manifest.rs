@@ -62,23 +62,72 @@ struct Repository {
     remote: String,
     required_check: String,
     default_branch: String,
-    current_tag: String,
+    identity_status: IdentityStatus,
+    current_tag: Option<String>,
     inventory_status: String,
     runtime_authority: String,
     product_name: Option<String>,
 }
 
-const PRODUCT_AUTHORITIES: [(&str, &str, Option<&str>); 10] = [
-    ("jeryu", "library", None),
-    ("jeryu-cache", "library", None),
-    ("jeryu-ci-runner", "shadow-only", None),
-    ("jeryu-core", "library", None),
-    ("jeryu-deploy", "shadow-only", None),
-    ("jeryu-intelligence", "library", None),
-    ("jeryu-jira", "library", Some("Work")),
-    ("jeryu-tool", "library", None),
-    ("jeryu-tool-finder", "library", None),
-    ("jeryu-web", "retirement-pending", None),
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "lowercase")]
+enum IdentityStatus {
+    Pending,
+    Bound,
+}
+
+const CONTROL_PLANE_TAG: &str = "jeryu-release-ops-v5.0.0-split.0";
+const PRODUCT_AUTHORITIES: [(&str, &str, Option<&str>, Option<&str>); 10] = [
+    ("jeryu", "library", None, Some("jeryu-v5.0.0-split.0")),
+    (
+        "jeryu-cache",
+        "library",
+        None,
+        Some("jeryu-cache-v5.0.0-split.0"),
+    ),
+    (
+        "jeryu-ci-runner",
+        "shadow-only",
+        None,
+        Some("jeryu-ci-runner-v5.0.0-split.0"),
+    ),
+    (
+        "jeryu-core",
+        "library",
+        None,
+        Some("jeryu-core-v5.0.0-split.1"),
+    ),
+    (
+        "jeryu-deploy",
+        "shadow-only",
+        None,
+        Some("jeryu-deploy-v5.0.0-split.0"),
+    ),
+    (
+        "jeryu-intelligence",
+        "library",
+        None,
+        Some("jeryu-intelligence-v5.0.0-split.0"),
+    ),
+    (
+        "jeryu-jira",
+        "library",
+        Some("Work"),
+        Some("jeryu-jira-v5.0.0-split.0"),
+    ),
+    (
+        "jeryu-tool",
+        "library",
+        None,
+        Some("jeryu-tool-v5.1.0-split.0"),
+    ),
+    ("jeryu-tool-finder", "library", None, None),
+    (
+        "jeryu-web",
+        "retirement-pending",
+        None,
+        Some("jeryu-web-v5.0.0-split.0"),
+    ),
 ];
 
 /// Validate the authority manifest rooted at `root`.
@@ -124,22 +173,23 @@ fn validate(manifest: &Manifest) -> Result<()> {
     let mut slugs = BTreeSet::new();
     let mut remotes = BTreeSet::new();
     for repo in &manifest.repo {
-        let (_, expected_runtime, expected_product_name) = PRODUCT_AUTHORITIES
+        let (_, expected_runtime, expected_product_name, expected_tag) = PRODUCT_AUTHORITIES
             .iter()
-            .find(|(name, _, _)| *name == repo.name)
+            .find(|(name, _, _, _)| *name == repo.name)
             .ok_or_else(|| anyhow::anyhow!("{} is not a governed Jeryu repository", repo.name))?;
         if repo.runtime_authority != *expected_runtime
             || repo.product_name.as_deref() != *expected_product_name
         {
             bail!("{} has the wrong runtime or product identity", repo.name);
         }
+        validate_repository(repo, *expected_tag)?;
     }
+    validate_repository(&manifest.control_plane, Some(CONTROL_PLANE_TAG))?;
     for repo in manifest
         .repo
         .iter()
         .chain(std::iter::once(&manifest.control_plane))
     {
-        validate_repository(repo)?;
         if !names.insert(repo.name.clone())
             || !paths.insert(repo.path.clone())
             || !slugs.insert(repo.jeryu_slug.clone())
@@ -163,7 +213,7 @@ fn validate(manifest: &Manifest) -> Result<()> {
 
     let mut expected_names = PRODUCT_AUTHORITIES
         .iter()
-        .map(|(name, _, _)| (*name).to_owned())
+        .map(|(name, _, _, _)| (*name).to_owned())
         .collect::<BTreeSet<_>>();
     if retired.contains("jeryu-web") {
         expected_names.remove("jeryu-web");
@@ -204,7 +254,7 @@ fn validate(manifest: &Manifest) -> Result<()> {
     Ok(())
 }
 
-fn validate_repository(repo: &Repository) -> Result<()> {
+fn validate_repository(repo: &Repository, expected_tag: Option<&str>) -> Result<()> {
     let expected_path = PathBuf::from(SPLIT_ROOT).join(&repo.name);
     let expected_slug = format!("jeryu/{}", repo.name);
     let expected_remote = format!("http://127.0.0.1:8787/git/{expected_slug}.git");
@@ -221,8 +271,23 @@ fn validate_repository(repo: &Repository) -> Result<()> {
             repo.name
         );
     }
+    let current_tag = match (
+        repo.identity_status,
+        repo.current_tag.as_deref(),
+        expected_tag,
+    ) {
+        (IdentityStatus::Pending, None, None) => return Ok(()),
+        (IdentityStatus::Bound, Some(actual), Some(expected)) if actual == expected => actual,
+        (IdentityStatus::Pending, Some(_), _) => {
+            bail!("{} is pending but carries a bound release tag", repo.name)
+        }
+        (IdentityStatus::Bound, None, _) => {
+            bail!("{} is bound without a release tag", repo.name)
+        }
+        (_, _, _) => bail!("{} release identity does not match authority", repo.name),
+    };
     let tag_prefix = format!("{}-v5.", repo.name);
-    let Some(version_and_revision) = repo.current_tag.strip_prefix(&tag_prefix) else {
+    let Some(version_and_revision) = current_tag.strip_prefix(&tag_prefix) else {
         bail!(
             "{} must retain its immutable v5 split-tag lineage",
             repo.name
@@ -312,7 +377,7 @@ mod tests {
         repo.jeryu_slug = "jeryu/jeryu-unknown".to_owned();
         repo.remote = "http://127.0.0.1:8787/git/jeryu/jeryu-unknown.git".to_owned();
         repo.required_check = "jeryu-unknown/required".to_owned();
-        repo.current_tag = "jeryu-unknown-v5.0.0-split.0".to_owned();
+        repo.current_tag = Some("jeryu-unknown-v5.0.0-split.0".to_owned());
         substituted.required_repos[0] = "jeryu-unknown".to_owned();
         assert!(validate(&substituted).is_err());
     }
@@ -344,7 +409,40 @@ mod tests {
         assert!(validate(&work).is_err());
 
         let mut tag = canonical();
-        tag.repo[0].current_tag = "jeryu-v5.latest-split.next".to_owned();
+        tag.repo[0].current_tag = Some("jeryu-v5.latest-split.next".to_owned());
         assert!(validate(&tag).is_err());
+    }
+
+    #[test]
+    fn pending_and_bound_release_identities_are_fail_closed() {
+        let mut pending_with_tag = canonical();
+        let finder = pending_with_tag
+            .repo
+            .iter_mut()
+            .find(|repo| repo.name == "jeryu-tool-finder")
+            .unwrap();
+        finder.current_tag = Some("jeryu-tool-finder-v5.1.0-split.0".to_owned());
+        assert!(validate(&pending_with_tag).is_err());
+
+        let mut bound_without_tag = canonical();
+        bound_without_tag.repo[0].current_tag = None;
+        assert!(validate(&bound_without_tag).is_err());
+
+        let mut invented_bound = canonical();
+        invented_bound.repo[0].current_tag = Some("jeryu-v5.0.0-split.9".to_owned());
+        assert!(validate(&invented_bound).is_err());
+
+        let raw = include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../repos.manifest.toml"
+        ));
+        assert!(
+            toml::from_str::<Manifest>(&raw.replacen(
+                "identity_status = \"bound\"",
+                "identity_status = \"released\"",
+                1,
+            ))
+            .is_err()
+        );
     }
 }
