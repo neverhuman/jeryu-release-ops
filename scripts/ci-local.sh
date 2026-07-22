@@ -21,6 +21,9 @@ case "$lane" in
   artifact-support)
     just artifact-support
     ;;
+  contract-drift)
+    just redline-consumer-test
+    ;;
   *)
     printf 'unsupported CI lane: %s\n' "$lane" >&2
     exit 2
