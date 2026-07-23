@@ -10,6 +10,14 @@ Jeryu family. [`repos.manifest.toml`](repos.manifest.toml) binds the exact
 lineage, and the canonical sibling `jain-redline` dependency. Container and
 portal manifests are projections of this authority, not competing sources.
 
+The authority is currently in compliance inventory. Its non-waivable contract
+requires Jankurai score 85 or higher; zero caps, hard findings, soft findings,
+disabled rules, or allowed score drop; hand-authored files no longer than 500
+lines with 300 as the refactoring target; and ordinary Git blobs no larger than
+1,048,576 bytes. Every repository explicitly declares whether authenticated
+local Jeryu LFS is required. Inventory records migration debt but never exempts
+it; the state may advance to `enforced` and may not roll back.
+
 This repository was seeded from Jeryu source commit `cbecf7caa0e932c76a341b2521e66e911233860d` by
 `ops/split/materialize.py`. It is part of the 11-repository Jeryu split family and keeps source
 paths stable where practical so ownership remains auditable.
