@@ -12,8 +12,10 @@ portal manifests are projections of this authority, not competing sources.
 
 Live read-only forge verification on 2026-07-23 resolved protected `main` and
 the immutable `jeryu-release-ops-v5.0.0-split.1` tag to the same commit,
-`cfc531bba3005002dad5d5c0732d905ad815c12d`. The authority binds that exact tag;
-later source successors do not advance it without the reviewed release lifecycle.
+`cfc531bba3005002dad5d5c0732d905ad815c12d`. A control-plane source successor
+binds that exact released base as `predecessor_tag`; after protected merge it
+receives the next immutable tag. Product rows instead bind their current
+released identities with `current_tag`.
 
 The authority is currently in compliance inventory. Its non-waivable contract
 requires Jankurai score 85 or higher; zero caps, hard findings, soft findings,

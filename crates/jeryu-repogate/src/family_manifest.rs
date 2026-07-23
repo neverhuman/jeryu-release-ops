@@ -12,7 +12,7 @@ use serde::Deserialize;
 
 use crate::GateOutcome;
 use compliance::{ComplianceContract, ComplianceState, validate_compliance};
-use identity::{CONTROL_PLANE_TAG, PRODUCT_AUTHORITIES};
+use identity::{CONTROL_PLANE_PREDECESSOR_TAG, PRODUCT_AUTHORITIES};
 
 /// Canonical authority-manifest path relative to the release control plane.
 pub const FAMILY_MANIFEST_RELATIVE_PATH: &str = "repos.manifest.toml";
@@ -36,7 +36,7 @@ struct Manifest {
     compliance: ComplianceContract,
     required_repos: Vec<String>,
     retired_histories: Vec<String>,
-    control_plane: Repository,
+    control_plane: ControlPlane,
     nested_families: NestedFamilies,
     repo: Vec<Repository>,
 }
@@ -71,6 +71,23 @@ struct Repository {
     default_branch: String,
     identity_status: IdentityStatus,
     current_tag: Option<String>,
+    inventory_status: String,
+    runtime_authority: String,
+    product_name: Option<String>,
+    lfs_required: bool,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ControlPlane {
+    name: String,
+    path: String,
+    jeryu_slug: String,
+    remote: String,
+    required_check: String,
+    default_branch: String,
+    identity_status: IdentityStatus,
+    predecessor_tag: String,
     inventory_status: String,
     runtime_authority: String,
     product_name: Option<String>,
@@ -150,12 +167,8 @@ fn validate(manifest: &Manifest) -> Result<()> {
         }
         validate_repository(repo, expected.tag, expected.lfs_required)?;
     }
-    validate_repository(&manifest.control_plane, Some(CONTROL_PLANE_TAG), false)?;
-    for repo in manifest
-        .repo
-        .iter()
-        .chain(std::iter::once(&manifest.control_plane))
-    {
+    validate_control_plane(&manifest.control_plane)?;
+    for repo in &manifest.repo {
         if !names.insert(repo.name.clone())
             || !paths.insert(repo.path.clone())
             || !slugs.insert(repo.jeryu_slug.clone())
@@ -165,6 +178,14 @@ fn validate(manifest: &Manifest) -> Result<()> {
                 "Jeryu authority contains a duplicate repository identity, path, slug, or origin"
             );
         }
+    }
+    let control = &manifest.control_plane;
+    if !names.insert(control.name.clone())
+        || !paths.insert(control.path.clone())
+        || !slugs.insert(control.jeryu_slug.clone())
+        || !remotes.insert(control.remote.clone())
+    {
+        bail!("Jeryu authority contains a duplicate repository identity, path, slug, or origin");
     }
     let retired = manifest
         .retired_histories
@@ -257,18 +278,39 @@ fn validate_repository(
         }
         (_, _, _) => bail!("{} release identity does not match authority", repo.name),
     };
-    let tag_prefix = format!("{}-v5.", repo.name);
-    let Some(version_and_revision) = current_tag.strip_prefix(&tag_prefix) else {
-        bail!(
-            "{} must retain its immutable v5 split-tag lineage",
-            repo.name
-        );
+    validate_tag_lineage(&repo.name, current_tag)
+}
+
+fn validate_control_plane(control: &ControlPlane) -> Result<()> {
+    let expected_path = PathBuf::from(SPLIT_ROOT).join(&control.name);
+    let expected_slug = format!("jeryu/{}", control.name);
+    let expected_remote = format!("http://127.0.0.1:8787/git/{expected_slug}.git");
+    let expected_check = format!("{}/required", control.name);
+    if control.name != "jeryu-release-ops"
+        || control.path != expected_path.to_string_lossy()
+        || control.jeryu_slug != expected_slug
+        || control.remote != expected_remote
+        || control.required_check != expected_check
+        || control.default_branch != "main"
+        || control.identity_status != IdentityStatus::Bound
+        || control.predecessor_tag != CONTROL_PLANE_PREDECESSOR_TAG
+        || control.inventory_status != "active"
+        || control.runtime_authority != "control-plane"
+        || control.product_name.is_some()
+        || control.lfs_required
+    {
+        bail!("Jeryu release control plane has a noncanonical identity or predecessor tag");
+    }
+    validate_tag_lineage(&control.name, &control.predecessor_tag)
+}
+
+fn validate_tag_lineage(name: &str, tag: &str) -> Result<()> {
+    let tag_prefix = format!("{name}-v5.");
+    let Some(version_and_revision) = tag.strip_prefix(&tag_prefix) else {
+        bail!("{name} must retain its immutable v5 split-tag lineage");
     };
     let Some((version, revision)) = version_and_revision.split_once("-split.") else {
-        bail!(
-            "{} must retain its immutable v5 split-tag lineage",
-            repo.name
-        );
+        bail!("{name} must retain its immutable v5 split-tag lineage");
     };
     if version.split('.').count() != 2
         || version
@@ -277,10 +319,7 @@ fn validate_repository(
         || revision.is_empty()
         || !revision.bytes().all(|byte| byte.is_ascii_digit())
     {
-        bail!(
-            "{} must retain its immutable v5 split-tag lineage",
-            repo.name
-        );
+        bail!("{name} must retain its immutable v5 split-tag lineage");
     }
     Ok(())
 }

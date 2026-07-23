@@ -95,9 +95,24 @@ fn rejects_stale_or_invented_control_plane_tags() {
         "jeryu-release-ops-v5.0.0-split.2",
     ] {
         let mut manifest = canonical();
-        manifest.control_plane.current_tag = Some(hostile.to_owned());
+        manifest.control_plane.predecessor_tag = hostile.to_owned();
         assert!(validate(&manifest).is_err());
     }
+}
+
+#[test]
+fn control_plane_and_product_tag_roles_cannot_be_mixed() {
+    assert!(
+        toml::from_str::<Manifest>(&RAW.replacen("predecessor_tag", "current_tag", 1)).is_err()
+    );
+    assert!(
+        toml::from_str::<Manifest>(&RAW.replacen(
+            "current_tag = \"jeryu-v5.0.0-split.0\"",
+            "predecessor_tag = \"jeryu-v5.0.0-split.0\"",
+            1,
+        ))
+        .is_err()
+    );
 }
 
 #[test]
