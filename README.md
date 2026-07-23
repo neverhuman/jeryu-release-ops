@@ -10,6 +10,11 @@ Jeryu family. [`repos.manifest.toml`](repos.manifest.toml) binds the exact
 lineage, and the canonical sibling `jain-redline` dependency. Container and
 portal manifests are projections of this authority, not competing sources.
 
+Live read-only forge verification on 2026-07-23 resolved protected `main` and
+the immutable `jeryu-release-ops-v5.0.0-split.1` tag to the same commit,
+`cfc531bba3005002dad5d5c0732d905ad815c12d`. The authority binds that exact tag;
+later source successors do not advance it without the reviewed release lifecycle.
+
 The authority is currently in compliance inventory. Its non-waivable contract
 requires Jankurai score 85 or higher; zero caps, hard findings, soft findings,
 disabled rules, or allowed score drop; hand-authored files no longer than 500

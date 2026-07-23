@@ -89,6 +89,18 @@ fn rejects_control_plane_work_and_malformed_tag_identity() {
 }
 
 #[test]
+fn rejects_stale_or_invented_control_plane_tags() {
+    for hostile in [
+        "jeryu-release-ops-v5.0.0-split.0",
+        "jeryu-release-ops-v5.0.0-split.2",
+    ] {
+        let mut manifest = canonical();
+        manifest.control_plane.current_tag = Some(hostile.to_owned());
+        assert!(validate(&manifest).is_err());
+    }
+}
+
+#[test]
 fn pending_and_bound_release_identities_are_fail_closed() {
     let mut pending_with_tag = canonical();
     let finder = pending_with_tag

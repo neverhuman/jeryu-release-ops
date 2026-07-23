@@ -1,6 +1,6 @@
 //! Fixed Jeryu repository identities governed by the family authority.
 
-pub(super) const CONTROL_PLANE_TAG: &str = "jeryu-release-ops-v5.0.0-split.0";
+pub(super) const CONTROL_PLANE_TAG: &str = "jeryu-release-ops-v5.0.0-split.1";
 
 pub(super) struct ExpectedRepository {
     pub(super) name: &'static str,
