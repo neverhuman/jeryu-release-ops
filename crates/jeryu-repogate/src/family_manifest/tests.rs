@@ -92,7 +92,9 @@ fn rejects_control_plane_work_and_malformed_tag_identity() {
 fn rejects_stale_or_invented_control_plane_tags() {
     for hostile in [
         "jeryu-release-ops-v5.0.0-split.0",
+        "jeryu-release-ops-v5.0.0-split.1",
         "jeryu-release-ops-v5.0.0-split.2",
+        "jeryu-release-ops-v5.0.0-split.4",
     ] {
         let mut manifest = canonical();
         manifest.control_plane.predecessor_tag = hostile.to_owned();

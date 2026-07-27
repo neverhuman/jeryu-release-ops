@@ -1,6 +1,6 @@
 # jeryu-release-ops
 
-[![Jankurai score: 88/100](https://img.shields.io/badge/Jankurai-88%2F100-brightgreen)](ops/ci/score.sh)
+[![Jankurai score: 93/100](https://img.shields.io/badge/Jankurai-93%2F100-brightgreen)](ops/ci/score.sh)
 
 Release, signing, governance, observability, and compliance tooling.
 
@@ -10,9 +10,9 @@ Jeryu family. [`repos.manifest.toml`](repos.manifest.toml) binds the exact
 lineage, and the canonical sibling `jain-redline` dependency. Container and
 portal manifests are projections of this authority, not competing sources.
 
-Live read-only forge verification on 2026-07-23 resolved protected `main` and
-the immutable `jeryu-release-ops-v5.0.0-split.1` tag to the same commit,
-`cfc531bba3005002dad5d5c0732d905ad815c12d`. A control-plane source successor
+Live read-only forge verification on 2026-07-27 resolved protected `main` and
+the immutable `jeryu-release-ops-v5.0.0-split.3` tag to the same commit,
+`1064853e9c182df83d0ce45e1a1dfd496664794c`. A control-plane source successor
 binds that exact released base as `predecessor_tag`; after protected merge it
 receives the next immutable tag. Product rows instead bind their current
 released identities with `current_tag`.

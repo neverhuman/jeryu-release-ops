@@ -1,6 +1,6 @@
 //! Fixed Jeryu repository identities governed by the family authority.
 
-pub(super) const CONTROL_PLANE_PREDECESSOR_TAG: &str = "jeryu-release-ops-v5.0.0-split.1";
+pub(super) const CONTROL_PLANE_PREDECESSOR_TAG: &str = "jeryu-release-ops-v5.0.0-split.3";
 
 pub(super) struct ExpectedRepository {
     pub(super) name: &'static str,
@@ -36,7 +36,7 @@ pub(super) const PRODUCT_AUTHORITIES: [ExpectedRepository; 10] = [
         name: "jeryu-core",
         runtime: "library",
         product_name: None,
-        tag: Some("jeryu-core-v5.0.0-split.1"),
+        tag: Some("jeryu-core-v5.0.0-split.2"),
         lfs_required: false,
     },
     ExpectedRepository {
@@ -50,21 +50,21 @@ pub(super) const PRODUCT_AUTHORITIES: [ExpectedRepository; 10] = [
         name: "jeryu-intelligence",
         runtime: "library",
         product_name: None,
-        tag: Some("jeryu-intelligence-v5.0.0-split.0"),
+        tag: Some("jeryu-intelligence-v5.0.0-split.1"),
         lfs_required: false,
     },
     ExpectedRepository {
         name: "jeryu-jira",
         runtime: "library",
         product_name: Some("Work"),
-        tag: Some("jeryu-jira-v5.0.0-split.0"),
+        tag: Some("jeryu-jira-v5.0.0-split.1"),
         lfs_required: false,
     },
     ExpectedRepository {
         name: "jeryu-tool",
         runtime: "library",
         product_name: None,
-        tag: Some("jeryu-tool-v5.1.0-split.0"),
+        tag: Some("jeryu-tool-v5.1.0-split.3"),
         lfs_required: false,
     },
     ExpectedRepository {
