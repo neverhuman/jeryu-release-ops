@@ -15,6 +15,24 @@ fn canonical_authority_passes() {
 }
 
 #[test]
+fn jeryu_tool_release_identity_is_exact() {
+    for hostile in [
+        "jeryu-tool-v5.1.0-split.3",
+        "jeryu-tool-v5.1.0-split.5",
+        "jeryu-tool-v5.1.0-split.7",
+    ] {
+        let mut manifest = canonical();
+        manifest
+            .repo
+            .iter_mut()
+            .find(|repo| repo.name == "jeryu-tool")
+            .unwrap()
+            .current_tag = Some(hostile.to_owned());
+        assert!(validate(&manifest).is_err());
+    }
+}
+
+#[test]
 fn rejects_old_root_duplicate_redline_and_slug_alias() {
     for hostile in [
         RAW.replace(SPLIT_ROOT, "/home/ubuntu/jeryu-split"),

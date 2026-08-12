@@ -64,7 +64,7 @@ pub(super) const PRODUCT_AUTHORITIES: [ExpectedRepository; 10] = [
         name: "jeryu-tool",
         runtime: "library",
         product_name: None,
-        tag: Some("jeryu-tool-v5.1.0-split.3"),
+        tag: Some("jeryu-tool-v5.1.0-split.6"),
         lfs_required: false,
     },
     ExpectedRepository {

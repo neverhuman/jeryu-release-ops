@@ -63,7 +63,7 @@ fi
 [[ "$("${governed_source}" --version)" == 'jankurai 1.6.11' ]] ||
   fail "governed Jankurai test source has the wrong version"
 [[ "$(sha256sum "${governed_source}" | awk '{print $1}')" == \
-   '96d99e6e7d8dc9cf23df1081edd1f975231456592f81d9405385219a2c7298aa' ]] ||
+   '9e6b8857a26f6004d4c74e510e13b06d880f2e2ae0c89502698889ed690c5d6c' ]] ||
   fail "governed Jankurai test source has the wrong digest"
 
 broker_bin="${tmp}/broker/bin/jankurai"
@@ -81,13 +81,13 @@ receipt_stage="${tmp}/local-receipt.json"
 jq -n \
   --arg path "${ambient_bin}" \
   '{
-    schema: "jeryu.jankurai-installation/v1",
+    schema: "jeryu.jankurai-installation/v2",
     source: {
       remote: "http://127.0.0.1:8787/git/jeryu/jankurai.git",
-      commit: "4dfbdfa3585f1928d5f996d7b5e14608dff14a03",
-      tag: "v1.6.11-deadlang-precision-split.2",
-      tree: "7e5d501aa6f0ee6ced9a48c6288a9943d0b9573c",
-      archive_sha256: "1aa3d178dec0fbb8d0657dd465ea6fda830ffc4ec1f65560b7b7d1682fd87e69",
+      commit: "b88562fdb124aa86dedd70ab972e7d0d87e58be1",
+      tag: "v1.6.11-deadlang-precision-split.3",
+      tree: "611229e54938c0e8808896e369fd54d095d258f7",
+      archive_sha256: "903a231eca8f6a1f050953b603d5a278a1606abcdf47434eb1b45262d74068aa",
       cargo_lock_sha256: "b9acb981c326226a687d0b6703e4f7ee303148e9e1a6dda1aa03d77988820f6a",
       verification: "release-authoritative"
     },
@@ -95,15 +95,33 @@ jq -n \
       rustc: "rustc 1.95.0 (59807616e 2026-04-14)",
       cargo: "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
       target_triple: "x86_64-unknown-linux-gnu",
-      mode: "cargo-install-locked-offline-path-v1",
+      mode: "oci-vendor-locked-offline-workspace-member-v2",
+      package_path: "crates/jankurai",
+      builder_image: "rust@sha256:d7482085ff5b415f84dba5647ae71606650bdef00db7aeb69f4b3d170c3e4082",
+      builder_image_id: "sha256:d7482085ff5b415f84dba5647ae71606650bdef00db7aeb69f4b3d170c3e4082",
+      linker: "GNU ld (GNU Binutils for Debian) 2.40",
+      glibc: "ldd (Debian GLIBC 2.36-9+deb12u14) 2.36",
+      vendor_files_sha256: "a7e332f4495d9748ea020ae8ee37c4240f0f035059799bd3dc74497437143d99",
+      vendor_file_count: "14889",
+      cargo_config_sha256: "b8982c761d62e447f2d1653c199d2d58e6b2de6c5a6f8ddba3d38e47b7f863d6",
+      environment: "CARGO_NET_OFFLINE=true,HOME=/tmp,LANG=C,LC_ALL=C,SOURCE_DATE_EPOCH=0,TZ=UTC",
+      rustflags: "--remap-path-prefix=/opt/jeryu/jankurai=/jankurai-build/source --remap-path-prefix=/opt/jeryu/vendor=/jankurai-build/vendor --remap-path-prefix=/opt/jeryu/target=/jankurai-build/target --remap-path-prefix=/usr/local/cargo=/jankurai-build/cargo",
+      command: "cargo install --locked --offline --path /opt/jeryu/jankurai/crates/jankurai --root /opt/jeryu/out --bin jankurai",
+      context_sha256: "889d19f86fc390b0f0cf0bd6ecb4d451c51a2d6fb328e5520e4310e7ee5dedd6",
       cargo_net_offline: true,
-      dedicated_cargo_home: true,
+      closed_vendor: true,
+      network_none: true,
+      read_only_root: true,
+      non_root: true,
+      capabilities_dropped: true,
+      no_new_privileges: true,
+      container_engine_path: "/usr/bin/docker",
       git_global_config_disabled: true,
       git_system_config_disabled: true,
       git_http_follow_redirects: false,
       git_terminal_prompt: false,
       jankurai_update_check: false,
-      network_scope: "local-forge-source-plus-offline-cargo",
+      network_scope: "local-forge-source-plus-closed-vendor-network-none",
       no_proxy: "127.0.0.1,localhost,::1"
     },
     governance: {
@@ -116,7 +134,7 @@ jq -n \
       protection_policy: "immutable-main-v1"
     },
     binary: {
-      sha256: "96d99e6e7d8dc9cf23df1081edd1f975231456592f81d9405385219a2c7298aa",
+      sha256: "9e6b8857a26f6004d4c74e510e13b06d880f2e2ae0c89502698889ed690c5d6c",
       version_output: "jankurai 1.6.11"
     },
     installation: {path: $path, atomic: true},
