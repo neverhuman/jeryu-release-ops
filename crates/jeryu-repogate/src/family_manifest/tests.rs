@@ -15,17 +15,23 @@ fn canonical_authority_passes() {
 }
 
 #[test]
-fn jeryu_tool_release_identity_is_exact() {
-    for hostile in [
-        "jeryu-tool-v5.1.0-split.3",
-        "jeryu-tool-v5.1.0-split.6",
-        "jeryu-tool-v5.1.0-split.8",
+fn updated_release_identities_are_exact() {
+    for (name, hostile) in [
+        ("jeryu-cache", "jeryu-cache-v5.0.0-split.0"),
+        ("jeryu-cache", "jeryu-cache-v5.0.0-split.2"),
+        ("jeryu-core", "jeryu-core-v5.0.0-split.2"),
+        ("jeryu-core", "jeryu-core-v5.0.0-split.4"),
+        ("jeryu-deploy", "jeryu-deploy-v5.0.0-split.0"),
+        ("jeryu-deploy", "jeryu-deploy-v5.0.0-split.2"),
+        ("jeryu-tool", "jeryu-tool-v5.1.0-split.3"),
+        ("jeryu-tool", "jeryu-tool-v5.1.0-split.6"),
+        ("jeryu-tool", "jeryu-tool-v5.1.0-split.8"),
     ] {
         let mut manifest = canonical();
         manifest
             .repo
             .iter_mut()
-            .find(|repo| repo.name == "jeryu-tool")
+            .find(|repo| repo.name == name)
             .unwrap()
             .current_tag = Some(hostile.to_owned());
         assert!(validate(&manifest).is_err());

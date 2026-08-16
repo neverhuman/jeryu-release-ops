@@ -22,7 +22,7 @@ pub(super) const PRODUCT_AUTHORITIES: [ExpectedRepository; 10] = [
         name: "jeryu-cache",
         runtime: "library",
         product_name: None,
-        tag: Some("jeryu-cache-v5.0.0-split.0"),
+        tag: Some("jeryu-cache-v5.0.0-split.1"),
         lfs_required: false,
     },
     ExpectedRepository {
@@ -36,14 +36,14 @@ pub(super) const PRODUCT_AUTHORITIES: [ExpectedRepository; 10] = [
         name: "jeryu-core",
         runtime: "library",
         product_name: None,
-        tag: Some("jeryu-core-v5.0.0-split.2"),
+        tag: Some("jeryu-core-v5.0.0-split.3"),
         lfs_required: false,
     },
     ExpectedRepository {
         name: "jeryu-deploy",
         runtime: "shadow-only",
         product_name: None,
-        tag: Some("jeryu-deploy-v5.0.0-split.0"),
+        tag: Some("jeryu-deploy-v5.0.0-split.1"),
         lfs_required: false,
     },
     ExpectedRepository {
