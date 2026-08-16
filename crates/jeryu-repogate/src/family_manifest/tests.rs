@@ -18,8 +18,8 @@ fn canonical_authority_passes() {
 fn jeryu_tool_release_identity_is_exact() {
     for hostile in [
         "jeryu-tool-v5.1.0-split.3",
-        "jeryu-tool-v5.1.0-split.5",
-        "jeryu-tool-v5.1.0-split.7",
+        "jeryu-tool-v5.1.0-split.6",
+        "jeryu-tool-v5.1.0-split.8",
     ] {
         let mut manifest = canonical();
         manifest
