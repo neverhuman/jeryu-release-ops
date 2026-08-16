@@ -43,7 +43,7 @@ pub(super) const PRODUCT_AUTHORITIES: [ExpectedRepository; 10] = [
         name: "jeryu-deploy",
         runtime: "shadow-only",
         product_name: None,
-        tag: Some("jeryu-deploy-v5.0.0-split.1"),
+        tag: Some("jeryu-deploy-v5.0.0-split.2"),
         lfs_required: false,
     },
     ExpectedRepository {
