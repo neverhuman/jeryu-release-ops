@@ -22,6 +22,16 @@ required_repos = [
 ]
 retired_histories = []
 
+[forges.local_transition]
+provider = "jeryu"
+base_url = "http://127.0.0.1:8787"
+git_url_template = "http://127.0.0.1:8787/git/{owner}/{repo}.git"
+
+[forges.hosted]
+provider = "jeryu"
+base_url = "https://git.neverhuman.org"
+git_url_template = "https://git.neverhuman.org/git/{owner}/{repo}.git"
+
 [compliance]
 minimum_jankurai_score = 85
 max_authored_lines = 500
@@ -34,6 +44,7 @@ max_disabled_rules = 0
 allowed_score_drop = 0
 
 [control_plane]
+authority_forge = "local_transition"
 name = "jeryu-release-ops"
 path = "/home/ubuntu/jain-split/jeryu-split/jeryu-release-ops"
 jeryu_slug = "jeryu/jeryu-release-ops"

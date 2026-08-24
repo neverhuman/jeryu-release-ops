@@ -20,6 +20,10 @@ const SPLIT_ROOT: &str = "/home/ubuntu/jain-split/jeryu-split";
 const AUTHORITY_PATH: &str =
     "/home/ubuntu/jain-split/jeryu-split/jeryu-release-ops/repos.manifest.toml";
 const REDLINE_ROOT: &str = "/home/ubuntu/jain-split/jain-redline";
+const LOCAL_FORGE_BASE_URL: &str = "http://127.0.0.1:8787";
+const LOCAL_FORGE_GIT_TEMPLATE: &str = "http://127.0.0.1:8787/git/{owner}/{repo}.git";
+const HOSTED_FORGE_BASE_URL: &str = "https://git.neverhuman.org";
+const HOSTED_FORGE_GIT_TEMPLATE: &str = "https://git.neverhuman.org/git/{owner}/{repo}.git";
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -33,12 +37,28 @@ struct Manifest {
     split_root: String,
     manifest_authority: String,
     compliance_state: ComplianceState,
+    forges: Forges,
     compliance: ComplianceContract,
     required_repos: Vec<String>,
     retired_histories: Vec<String>,
     control_plane: ControlPlane,
     nested_families: NestedFamilies,
     repo: Vec<Repository>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Forges {
+    local_transition: ForgeProfile,
+    hosted: ForgeProfile,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ForgeProfile {
+    provider: String,
+    base_url: String,
+    git_url_template: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -80,6 +100,7 @@ struct Repository {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ControlPlane {
+    authority_forge: String,
     name: String,
     path: String,
     jeryu_slug: String,
@@ -143,6 +164,7 @@ fn validate(manifest: &Manifest) -> Result<()> {
     if manifest.split_root != SPLIT_ROOT || manifest.manifest_authority != AUTHORITY_PATH {
         bail!("Jeryu split root or authority path is not canonical");
     }
+    validate_forges(&manifest.forges)?;
     validate_compliance(&manifest.compliance)?;
     if manifest.control_plane.name != "jeryu-release-ops"
         || manifest.control_plane.runtime_authority != "control-plane"
@@ -241,6 +263,36 @@ fn validate(manifest: &Manifest) -> Result<()> {
     Ok(())
 }
 
+fn validate_forges(forges: &Forges) -> Result<()> {
+    validate_forge_profile(
+        "local_transition",
+        &forges.local_transition,
+        LOCAL_FORGE_BASE_URL,
+        LOCAL_FORGE_GIT_TEMPLATE,
+    )?;
+    validate_forge_profile(
+        "hosted",
+        &forges.hosted,
+        HOSTED_FORGE_BASE_URL,
+        HOSTED_FORGE_GIT_TEMPLATE,
+    )
+}
+
+fn validate_forge_profile(
+    name: &str,
+    profile: &ForgeProfile,
+    expected_base_url: &str,
+    expected_git_template: &str,
+) -> Result<()> {
+    if profile.provider != "jeryu"
+        || profile.base_url != expected_base_url
+        || profile.git_url_template != expected_git_template
+    {
+        bail!("Jeryu forge profile {name} is not the governed transport identity");
+    }
+    Ok(())
+}
+
 fn validate_repository(
     repo: &Repository,
     expected_tag: Option<&str>,
@@ -287,6 +339,7 @@ fn validate_control_plane(control: &ControlPlane) -> Result<()> {
     let expected_remote = format!("http://127.0.0.1:8787/git/{expected_slug}.git");
     let expected_check = format!("{}/required", control.name);
     if control.name != "jeryu-release-ops"
+        || control.authority_forge != "local_transition"
         || control.path != expected_path.to_string_lossy()
         || control.jeryu_slug != expected_slug
         || control.remote != expected_remote

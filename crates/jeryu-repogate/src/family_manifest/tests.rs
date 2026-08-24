@@ -15,6 +15,41 @@ fn canonical_authority_passes() {
 }
 
 #[test]
+fn forge_profiles_and_authority_selector_are_explicit_and_fail_closed() {
+    let manifest = canonical();
+    assert_eq!(manifest.control_plane.authority_forge, "local_transition");
+    assert_eq!(manifest.forges.local_transition.provider, "jeryu");
+    assert_eq!(manifest.forges.hosted.provider, "jeryu");
+
+    let mut implicit_loopback = canonical();
+    implicit_loopback.forges.local_transition.base_url.clear();
+    assert!(validate(&implicit_loopback).is_err());
+
+    let mut insecure_hosted = canonical();
+    insecure_hosted.forges.hosted.base_url = "http://git.neverhuman.org".to_owned();
+    assert!(validate(&insecure_hosted).is_err());
+
+    let mut malformed_template = canonical();
+    malformed_template.forges.hosted.git_url_template =
+        "https://git.neverhuman.org/git/{repo}/{owner}.git".to_owned();
+    assert!(validate(&malformed_template).is_err());
+
+    let mut unsupported_provider = canonical();
+    unsupported_provider.forges.hosted.provider = "github".to_owned();
+    assert!(validate(&unsupported_provider).is_err());
+
+    let mut premature_cutover = canonical();
+    premature_cutover.control_plane.authority_forge = "hosted".to_owned();
+    assert!(validate(&premature_cutover).is_err());
+
+    let unknown_profile = RAW.replace(
+        "[forges.hosted]",
+        "[forges.unknown]\nprovider = \"jeryu\"\nbase_url = \"https://unknown.invalid\"\ngit_url_template = \"https://unknown.invalid/git/{owner}/{repo}.git\"\n\n[forges.hosted]",
+    );
+    assert!(toml::from_str::<Manifest>(&unknown_profile).is_err());
+}
+
+#[test]
 fn updated_release_identities_are_exact() {
     for (name, hostile) in [
         ("jeryu-cache", "jeryu-cache-v5.0.0-split.0"),
