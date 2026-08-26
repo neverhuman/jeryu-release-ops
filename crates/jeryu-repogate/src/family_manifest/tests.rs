@@ -54,13 +54,16 @@ fn updated_release_identities_are_exact() {
     for (name, hostile) in [
         ("jeryu-cache", "jeryu-cache-v5.0.0-split.0"),
         ("jeryu-cache", "jeryu-cache-v5.0.0-split.2"),
-        ("jeryu-core", "jeryu-core-v5.0.0-split.2"),
+        ("jeryu-core", "jeryu-core-v5.0.0-split.3"),
         ("jeryu-core", "jeryu-core-v5.0.0-split.4"),
-        ("jeryu-deploy", "jeryu-deploy-v5.0.0-split.1"),
-        ("jeryu-deploy", "jeryu-deploy-v5.0.0-split.3"),
+        ("jeryu-core", "jeryu-core-v5.0.0-split.6"),
+        ("jeryu-deploy", "jeryu-deploy-v5.0.0-split.2"),
+        ("jeryu-deploy", "jeryu-deploy-v5.0.0-split.4"),
         ("jeryu-tool", "jeryu-tool-v5.1.0-split.3"),
         ("jeryu-tool", "jeryu-tool-v5.1.0-split.6"),
         ("jeryu-tool", "jeryu-tool-v5.1.0-split.8"),
+        ("jeryu-web", "jeryu-web-v5.0.0-split.0"),
+        ("jeryu-web", "jeryu-web-v5.0.0-split.2"),
     ] {
         let mut manifest = canonical();
         manifest
@@ -153,7 +156,10 @@ fn rejects_stale_or_invented_control_plane_tags() {
         "jeryu-release-ops-v5.0.0-split.0",
         "jeryu-release-ops-v5.0.0-split.1",
         "jeryu-release-ops-v5.0.0-split.2",
+        "jeryu-release-ops-v5.0.0-split.3",
         "jeryu-release-ops-v5.0.0-split.4",
+        "jeryu-release-ops-v5.0.0-split.5",
+        "jeryu-release-ops-v5.0.0-split.7",
     ] {
         let mut manifest = canonical();
         manifest.control_plane.predecessor_tag = hostile.to_owned();

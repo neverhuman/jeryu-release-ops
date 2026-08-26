@@ -1,5 +1,11 @@
 # Changelog
 
+## jeryu-release-ops-v5.0.0-split.7 - 2026-08-26
+- Add explicit local-transition and hosted Jeryu forge profiles while keeping
+  the local transition forge authoritative.
+- Repair the release identity forward from immutable split.6 and bind the
+  released Jeryu Core split.5, Deploy split.3, and Web split.1 authorities.
+
 ## Unreleased
 - v5.0.0 split baseline live on the local forge; merge-to-GitHub mirror verified.
 

@@ -1,6 +1,6 @@
 //! Fixed Jeryu repository identities governed by the family authority.
 
-pub(super) const CONTROL_PLANE_PREDECESSOR_TAG: &str = "jeryu-release-ops-v5.0.0-split.3";
+pub(super) const CONTROL_PLANE_PREDECESSOR_TAG: &str = "jeryu-release-ops-v5.0.0-split.6";
 
 pub(super) struct ExpectedRepository {
     pub(super) name: &'static str,
@@ -36,14 +36,14 @@ pub(super) const PRODUCT_AUTHORITIES: [ExpectedRepository; 10] = [
         name: "jeryu-core",
         runtime: "library",
         product_name: None,
-        tag: Some("jeryu-core-v5.0.0-split.3"),
+        tag: Some("jeryu-core-v5.0.0-split.5"),
         lfs_required: false,
     },
     ExpectedRepository {
         name: "jeryu-deploy",
         runtime: "shadow-only",
         product_name: None,
-        tag: Some("jeryu-deploy-v5.0.0-split.2"),
+        tag: Some("jeryu-deploy-v5.0.0-split.3"),
         lfs_required: false,
     },
     ExpectedRepository {
@@ -78,7 +78,7 @@ pub(super) const PRODUCT_AUTHORITIES: [ExpectedRepository; 10] = [
         name: "jeryu-web",
         runtime: "retirement-pending",
         product_name: None,
-        tag: Some("jeryu-web-v5.0.0-split.0"),
+        tag: Some("jeryu-web-v5.0.0-split.1"),
         lfs_required: false,
     },
 ];

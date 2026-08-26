@@ -10,9 +10,9 @@ Jeryu family. [`repos.manifest.toml`](repos.manifest.toml) binds the exact
 lineage, and the canonical sibling `jain-redline` dependency. Container and
 portal manifests are projections of this authority, not competing sources.
 
-Live read-only forge verification on 2026-07-27 resolved protected `main` and
-the immutable `jeryu-release-ops-v5.0.0-split.3` tag to the same commit,
-`1064853e9c182df83d0ce45e1a1dfd496664794c`. A control-plane source successor
+Live read-only forge verification on 2026-08-26 resolved protected `main` and
+the immutable `jeryu-release-ops-v5.0.0-split.6` tag to the same commit,
+`0772dca04bbdfbcaac8ee10fafd8789d01fd1cab`. A control-plane source successor
 binds that exact released base as `predecessor_tag`; after protected merge it
 receives the next immutable tag. Product rows instead bind their current
 released identities with `current_tag`.
