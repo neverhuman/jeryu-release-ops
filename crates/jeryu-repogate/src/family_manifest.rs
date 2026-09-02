@@ -24,6 +24,7 @@ const LOCAL_FORGE_BASE_URL: &str = "http://127.0.0.1:8787";
 const LOCAL_FORGE_GIT_TEMPLATE: &str = "http://127.0.0.1:8787/git/{owner}/{repo}.git";
 const HOSTED_FORGE_BASE_URL: &str = "https://git.neverhuman.org";
 const HOSTED_FORGE_GIT_TEMPLATE: &str = "https://git.neverhuman.org/git/{owner}/{repo}.git";
+const HOSTED_DEPENDENCY_RESOLUTION: &str = "immutable-tags-via-hosted-transport";
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -165,6 +166,8 @@ fn validate(manifest: &Manifest) -> Result<()> {
         bail!("Jeryu split root or authority path is not canonical");
     }
     validate_forges(&manifest.forges)?;
+    let authority_forge =
+        selected_authority_forge(&manifest.forges, &manifest.control_plane.authority_forge)?;
     validate_compliance(&manifest.compliance)?;
     if manifest.control_plane.name != "jeryu-release-ops"
         || manifest.control_plane.runtime_authority != "control-plane"
@@ -187,9 +190,9 @@ fn validate(manifest: &Manifest) -> Result<()> {
         {
             bail!("{} has the wrong runtime or product identity", repo.name);
         }
-        validate_repository(repo, expected.tag, expected.lfs_required)?;
+        validate_repository(repo, expected.tag, expected.lfs_required, authority_forge)?;
     }
-    validate_control_plane(&manifest.control_plane)?;
+    validate_control_plane(&manifest.control_plane, authority_forge)?;
     for repo in &manifest.repo {
         if !names.insert(repo.name.clone())
             || !paths.insert(repo.path.clone())
@@ -255,7 +258,7 @@ fn validate(manifest: &Manifest) -> Result<()> {
         || redline.container_path != REDLINE_ROOT
         || redline.control_plane != format!("{REDLINE_ROOT}/redline-split-ops")
         || redline.manifest_path != format!("{REDLINE_ROOT}/redline-split-ops/repos.manifest.toml")
-        || redline.dependency_resolution != "immutable-local-forge-tags"
+        || redline.dependency_resolution != HOSTED_DEPENDENCY_RESOLUTION
         || !redline.required
     {
         bail!("Redline dependency must resolve only through canonical jain-redline authority");
@@ -278,6 +281,16 @@ fn validate_forges(forges: &Forges) -> Result<()> {
     )
 }
 
+fn selected_authority_forge<'a>(forges: &'a Forges, selector: &str) -> Result<&'a ForgeProfile> {
+    match selector {
+        "hosted" => Ok(&forges.hosted),
+        "local_transition" => {
+            bail!("the local-transition forge is retained for compatibility, not authority")
+        }
+        _ => bail!("the Jeryu authority forge selector is unknown"),
+    }
+}
+
 fn validate_forge_profile(
     name: &str,
     profile: &ForgeProfile,
@@ -297,10 +310,14 @@ fn validate_repository(
     repo: &Repository,
     expected_tag: Option<&str>,
     expected_lfs: bool,
+    authority_forge: &ForgeProfile,
 ) -> Result<()> {
     let expected_path = PathBuf::from(SPLIT_ROOT).join(&repo.name);
     let expected_slug = format!("jeryu/{}", repo.name);
-    let expected_remote = format!("http://127.0.0.1:8787/git/{expected_slug}.git");
+    let expected_remote = authority_forge
+        .git_url_template
+        .replace("{owner}", "jeryu")
+        .replace("{repo}", &repo.name);
     let expected_check = format!("{}/required", repo.name);
     if repo.path != expected_path.to_string_lossy()
         || repo.jeryu_slug != expected_slug
@@ -333,13 +350,16 @@ fn validate_repository(
     validate_tag_lineage(&repo.name, current_tag)
 }
 
-fn validate_control_plane(control: &ControlPlane) -> Result<()> {
+fn validate_control_plane(control: &ControlPlane, authority_forge: &ForgeProfile) -> Result<()> {
     let expected_path = PathBuf::from(SPLIT_ROOT).join(&control.name);
     let expected_slug = format!("jeryu/{}", control.name);
-    let expected_remote = format!("http://127.0.0.1:8787/git/{expected_slug}.git");
+    let expected_remote = authority_forge
+        .git_url_template
+        .replace("{owner}", "jeryu")
+        .replace("{repo}", &control.name);
     let expected_check = format!("{}/required", control.name);
     if control.name != "jeryu-release-ops"
-        || control.authority_forge != "local_transition"
+        || control.authority_forge != "hosted"
         || control.path != expected_path.to_string_lossy()
         || control.jeryu_slug != expected_slug
         || control.remote != expected_remote

@@ -6,6 +6,12 @@ Version source is `VERSION` plus the split tag recorded in
 `repos.manifest.toml` when present. Release notes are recorded in
 `CHANGELOG.md`.
 
+The authoritative repository and tag transport is `git.neverhuman.org` for
+every active Jeryu split member. Loopback remains only a declared transition
+profile and is not an eligible authority selector. Cargo Git source spellings
+stay stable and are transported to the hosted forge through governed Git CLI
+rewrites, avoiding duplicate dependency identities.
+
 ## Release Gate
 
 Before a release or split tag is promoted:

@@ -1,8 +1,9 @@
 # Changelog
 
-## jeryu-release-ops-v5.0.0-split.7 - 2026-08-26
-- Add explicit local-transition and hosted Jeryu forge profiles while keeping
-  the local transition forge authoritative.
+## jeryu-release-ops-v5.0.0-split.7 - 2026-09-02
+- Make the hosted Jeryu forge authoritative for every family repository while
+  retaining the local-transition profile only as a non-authoritative transport
+  compatibility descriptor.
 - Repair the release identity forward from immutable split.6 and bind the
   released Jeryu Core split.5, Deploy split.3, and Web split.1 authorities.
 

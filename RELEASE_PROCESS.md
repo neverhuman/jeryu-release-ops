@@ -6,6 +6,13 @@
 as release evidence. That command binds the fast, check, score, security,
 artifact-support, and Redline consumer contract lanes.
 
+Source authority and release-ref readback use
+`https://git.neverhuman.org/git/jeryu/<repo>.git`. The loopback forge profile is
+non-authoritative and must not be selected for a new release. Cargo dependency
+source strings are not rewritten during this cutover: stable source spelling
+prevents duplicate crate identities, while governed Git CLI rewrites carry the
+actual transport to the hosted forge.
+
 The Redline compatibility producer is `ops/ci/redline-consumer.sh`. It may run
 only from clean, forge-equal `main` after a fresh Redline family receipt has
 verified every immutable family tag. The committed lock must resolve

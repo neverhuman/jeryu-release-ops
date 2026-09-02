@@ -10,7 +10,15 @@ Jeryu family. [`repos.manifest.toml`](repos.manifest.toml) binds the exact
 lineage, and the canonical sibling `jain-redline` dependency. Container and
 portal manifests are projections of this authority, not competing sources.
 
-Live read-only forge verification on 2026-08-26 resolved protected `main` and
+The active authority profile is the private hosted Jeryu forge at
+`https://git.neverhuman.org`; every control-plane and product `remote` in the
+manifest uses that host. The loopback profile is retained only to describe the
+transition boundary and is rejected as an authority selector. Existing Cargo
+Git source spellings remain unchanged to preserve crate identity, while the
+host's longest-match Git rewrites and CLI transport route those fetches to the
+hosted forge.
+
+Live read-only hosted-forge verification on 2026-09-02 resolved protected `main` and
 the immutable `jeryu-release-ops-v5.0.0-split.6` tag to the same commit,
 `0772dca04bbdfbcaac8ee10fafd8789d01fd1cab`. A control-plane source successor
 binds that exact released base as `predecessor_tag`; after protected merge it

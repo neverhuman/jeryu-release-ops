@@ -15,11 +15,21 @@ fn canonical_authority_passes() {
 }
 
 #[test]
-fn forge_profiles_and_authority_selector_are_explicit_and_fail_closed() {
+fn hosted_authority_selector_and_profiles_are_explicit_and_fail_closed() {
     let manifest = canonical();
-    assert_eq!(manifest.control_plane.authority_forge, "local_transition");
+    assert_eq!(manifest.control_plane.authority_forge, "hosted");
     assert_eq!(manifest.forges.local_transition.provider, "jeryu");
     assert_eq!(manifest.forges.hosted.provider, "jeryu");
+    assert_eq!(
+        manifest.control_plane.remote,
+        "https://git.neverhuman.org/git/jeryu/jeryu-release-ops.git"
+    );
+    for repo in &manifest.repo {
+        assert_eq!(
+            repo.remote,
+            format!("https://git.neverhuman.org/git/jeryu/{}.git", repo.name)
+        );
+    }
 
     let mut implicit_loopback = canonical();
     implicit_loopback.forges.local_transition.base_url.clear();
@@ -38,9 +48,29 @@ fn forge_profiles_and_authority_selector_are_explicit_and_fail_closed() {
     unsupported_provider.forges.hosted.provider = "github".to_owned();
     assert!(validate(&unsupported_provider).is_err());
 
-    let mut premature_cutover = canonical();
-    premature_cutover.control_plane.authority_forge = "hosted".to_owned();
-    assert!(validate(&premature_cutover).is_err());
+    let mut authority_rollback = canonical();
+    authority_rollback.control_plane.authority_forge = "local_transition".to_owned();
+    assert!(validate(&authority_rollback).is_err());
+
+    let mut unknown_authority = canonical();
+    unknown_authority.control_plane.authority_forge = "unknown".to_owned();
+    assert!(validate(&unknown_authority).is_err());
+
+    let mut loopback_product = canonical();
+    loopback_product.repo[0].remote = "http://127.0.0.1:8787/git/jeryu/jeryu.git".to_owned();
+    assert!(validate(&loopback_product).is_err());
+
+    let mut loopback_control = canonical();
+    loopback_control.control_plane.remote =
+        "http://127.0.0.1:8787/git/jeryu/jeryu-release-ops.git".to_owned();
+    assert!(validate(&loopback_control).is_err());
+
+    let mut loopback_redline_transport = canonical();
+    loopback_redline_transport
+        .nested_families
+        .redline
+        .dependency_resolution = "immutable-local-forge-tags".to_owned();
+    assert!(validate(&loopback_redline_transport).is_err());
 
     let unknown_profile = RAW.replace(
         "[forges.hosted]",
@@ -112,7 +142,7 @@ fn rejects_unknown_fields_and_self_consistent_identity_substitution() {
     repo.name = "jeryu-unknown".to_owned();
     repo.path = format!("{SPLIT_ROOT}/jeryu-unknown");
     repo.jeryu_slug = "jeryu/jeryu-unknown".to_owned();
-    repo.remote = "http://127.0.0.1:8787/git/jeryu/jeryu-unknown.git".to_owned();
+    repo.remote = "https://git.neverhuman.org/git/jeryu/jeryu-unknown.git".to_owned();
     repo.required_check = "jeryu-unknown/required".to_owned();
     repo.current_tag = Some("jeryu-unknown-v5.0.0-split.0".to_owned());
     substituted.required_repos[0] = "jeryu-unknown".to_owned();
