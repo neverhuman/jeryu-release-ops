@@ -25,3 +25,7 @@ release-readiness: fast check score security artifact-support redline-consumer-t
 
 profile:
   printf '%s\n' "rust-workspace"
+
+# Entry point for the protected jeryu-release-ops/required check: the existing lane, unchanged.
+required:
+  bash ops/ci/pr-ci.sh
