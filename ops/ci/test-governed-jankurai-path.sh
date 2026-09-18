@@ -83,7 +83,7 @@ jq -n \
   '{
     schema: "jeryu.jankurai-installation/v2",
     source: {
-      remote: "http://127.0.0.1:8787/git/jeryu/jankurai.git",
+      remote: "https://git.neverhuman.org/git/jeryu/jankurai.git",
       commit: "b88562fdb124aa86dedd70ab972e7d0d87e58be1",
       tag: "v1.6.11-deadlang-precision-split.3",
       tree: "611229e54938c0e8808896e369fd54d095d258f7",
@@ -126,7 +126,7 @@ jq -n \
     },
     governance: {
       status: "governed",
-      manifest_repo: "http://127.0.0.1:8787/git/jeryu/jeryu-tool.git",
+      manifest_repo: "https://git.neverhuman.org/git/jeryu/jeryu-tool.git",
       manifest_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       manifest_tree: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
       manifest_sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
@@ -184,9 +184,11 @@ env -i HOME="${tmp}/home" PATH="${tmp}/broker/bin:/usr/bin:/bin" \
 
 # Ordinary local mode keeps the governed home installation authoritative even
 # when an older same-version binary appears earlier on the real default PATH.
+# `jankurai` is the rendered wrapper function, so the executable it resolves to
+# is checked with `type -P`, which ignores functions.
 # shellcheck disable=SC2016
 env -i HOME="${tmp}/home" PATH="${tmp}/home/.local/bin:/usr/bin:/bin" \
-  bash -c 'source "$1"; require_jankurai; [[ "$JERYU_GOVERNED_JANKURAI_BIN" == "$2" ]]; [[ "$(command -v jankurai)" == "$2" ]]' \
+  bash -c 'source "$1"; require_jankurai; [[ "$JERYU_GOVERNED_JANKURAI_BIN" == "$2" ]]; [[ "$(type -t jankurai)" == function ]]; [[ "$(type -P -- jankurai)" == "$2" ]]' \
   bash "${test_local_lib}" "${ambient_bin}"
 # shellcheck disable=SC2016
 env -i HOME="${tmp}/home" PATH="/usr/bin:/bin" \
