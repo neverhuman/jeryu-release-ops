@@ -12,7 +12,7 @@ use std::process::Command;
 use anyhow::Result;
 use serde::Serialize;
 
-use crate::api_surface::{self, ApiSurfaceReport};
+use crate::api_surface::{self, ApiSurfaceReport, SemverChecks};
 use crate::cargo_edit::{read_workspace_version, write_workspace_version};
 use crate::changelog::roll_unreleased;
 use crate::classify::{Bump, classify_range};
@@ -94,8 +94,35 @@ fn range_head(range: &str) -> String {
 ///
 /// # Errors
 /// Returns an error if the workspace version cannot be read, the git range
-/// cannot be listed, or the blast-radius plan cannot be built.
+/// cannot be listed, the blast-radius plan cannot be built, or the public-API
+/// gate cannot run because `cargo-semver-checks` is absent (see
+/// [`api_surface::ALLOW_MISSING_ENV`]).
 pub fn decide(root: &Path, range: &str) -> Result<Decision> {
+    decide_with(
+        root,
+        range,
+        &SemverChecks::cargo(),
+        std::env::var(api_surface::ALLOW_MISSING_ENV)
+            .ok()
+            .as_deref()
+            == Some("1"),
+    )
+}
+
+/// [`decide`] with the public-API gate's host dependencies passed in: the cargo
+/// front-end reaching `cargo semver-checks`, and whether a missing tool is
+/// tolerated (see [`api_surface::ALLOW_MISSING_ENV`]). Callers that want the
+/// SIGNAL-A-only decision say so here instead of relying on what the host
+/// happens to have installed.
+///
+/// # Errors
+/// Same as [`decide`].
+pub fn decide_with(
+    root: &Path,
+    range: &str,
+    tool: &SemverChecks,
+    allow_missing: bool,
+) -> Result<Decision> {
     let current = read_workspace_version(root)?;
 
     if latest_commit_is_skip(root, range) {
@@ -111,7 +138,13 @@ pub fn decide(root: &Path, range: &str) -> Result<Decision> {
 
     let commits = commits_in_range(root, range)?;
     let plan = jeryu_repogate::build_affected_plan(root, &range_base(range), 40)?;
-    let api = api_surface::api_breaking(root, &plan.changed_files, &plan.packages)?;
+    let api = api_surface::api_breaking_with(
+        root,
+        &plan.changed_files,
+        &plan.packages,
+        tool,
+        allow_missing,
+    )?;
     let bump = classify_range(&commits, api.breaking);
     let to = current.bumped(bump);
 

@@ -2,15 +2,20 @@
 //!
 //! Mirrors `jeryu-repogate`'s git-init test idiom: build a throwaway workspace,
 //! seed an `origin/main` ref, layer conventional commits on top, then drive the
-//! public `decide`/`apply` API and assert the version bump + CHANGELOG roll. The
-//! `cargo semver-checks` lane is not exercised here (the temp workspace has no
-//! published baseline), so these tests cover the commit-text + floor=patch +
-//! `[skip-version]` decision paths deterministically.
+//! public `decide`/`apply` API and assert the version bump + CHANGELOG roll.
+//!
+//! The commit-text + floor=patch + `[skip-version]` paths ask for the
+//! SIGNAL-A-only decision explicitly (`decide_signal_a`) rather than depending
+//! on whether the host has `cargo-semver-checks`; the `cargo semver-checks` lane
+//! itself is driven through a stand-in cargo, because the temp workspace has no
+//! published baseline for the real tool to diff against.
 
 use std::path::Path;
 use std::process::Command;
 
-use jeryu_wsversion::{apply, commits_in_range, decide, read_workspace_version};
+use jeryu_wsversion::{
+    ALLOW_MISSING_ENV, SemverChecks, apply, commits_in_range, decide_with, read_workspace_version,
+};
 
 fn git(root: &Path, args: &[&str]) {
     let status = Command::new("git")
@@ -66,6 +71,33 @@ fn commit(root: &Path, rel: &str, body: &str, subject: &str) {
     git(root, &["commit", "-q", "-m", subject]);
 }
 
+/// Decide from the commit signal alone, as an operator without
+/// `cargo-semver-checks` would after opting in via `ALLOW_MISSING_ENV`.
+fn decide_signal_a(root: &Path, range: &str) -> jeryu_wsversion::Decision {
+    decide_with(root, range, &SemverChecks::cargo(), true).expect("decide")
+}
+
+/// A stand-in `cargo` whose `semver-checks --version` succeeds (so the gate
+/// considers the tool installed) and whose `check-release` exits `check_exit`.
+fn stub_cargo(root: &Path, version_exit: i32, check_exit: i32) -> std::path::PathBuf {
+    let bin = root.join("cargo-stub.sh");
+    write(
+        root,
+        "cargo-stub.sh",
+        &format!(
+            "#!/usr/bin/env bash\nif [[ \"$2\" == \"--version\" ]]; then exit {version_exit}; fi\nexit {check_exit}\n"
+        ),
+    );
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = std::fs::metadata(&bin).unwrap().permissions();
+        perms.set_mode(0o755);
+        std::fs::set_permissions(&bin, perms).unwrap();
+    }
+    bin
+}
+
 #[test]
 fn feat_commit_bumps_minor_and_rolls_changelog() {
     let dir = tempfile::tempdir().unwrap();
@@ -78,7 +110,7 @@ fn feat_commit_bumps_minor_and_rolls_changelog() {
         "feat(demo): add a feature",
     );
 
-    let decision = decide(root, "origin/main..HEAD").unwrap();
+    let decision = decide_signal_a(root, "origin/main..HEAD");
     assert_eq!(decision.from, "4.0.0");
     assert_eq!(decision.to, "4.1.0");
     assert_eq!(decision.bump, "minor");
@@ -102,7 +134,7 @@ fn chore_only_floors_to_patch() {
     init_repo(root);
     commit(root, "docs/notes.md", "notes\n", "docs: add notes");
 
-    let decision = decide(root, "origin/main..HEAD").unwrap();
+    let decision = decide_signal_a(root, "origin/main..HEAD");
     assert_eq!(decision.to, "4.0.1");
     assert_eq!(decision.bump, "patch");
 }
@@ -119,7 +151,7 @@ fn breaking_bang_bumps_major() {
         "feat(demo)!: remove the old api",
     );
 
-    let decision = decide(root, "origin/main..HEAD").unwrap();
+    let decision = decide_signal_a(root, "origin/main..HEAD");
     assert_eq!(decision.to, "5.0.0");
     assert_eq!(decision.bump, "major");
 }
@@ -147,7 +179,7 @@ fn breaking_change_footer_bumps_major() {
         ],
     );
 
-    let decision = decide(root, "origin/main..HEAD").unwrap();
+    let decision = decide_signal_a(root, "origin/main..HEAD");
     assert_eq!(decision.to, "5.0.0");
     assert_eq!(decision.bump, "major");
 }
@@ -175,7 +207,7 @@ fn skip_version_latest_commit_yields_no_bump() {
         ],
     );
 
-    let decision = decide(root, "origin/main..HEAD").unwrap();
+    let decision = decide_signal_a(root, "origin/main..HEAD");
     assert!(decision.skipped);
     assert_eq!(decision.from, decision.to);
     assert_eq!(decision.bump, "none");
@@ -209,4 +241,87 @@ fn commits_in_range_excludes_skip_version() {
     // Only the real feat commit survives; the release commit is filtered out.
     assert_eq!(commits.len(), 1);
     assert_eq!(commits[0].kind, "feat");
+}
+
+#[test]
+fn semver_checks_breakage_forces_major_even_for_a_fix_commit() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    init_repo(root);
+    let cargo = stub_cargo(root, 0, 1);
+    commit(
+        root,
+        "crates/demo/src/lib.rs",
+        "pub fn api_renamed() {}\n",
+        "fix(demo): reshape the api",
+    );
+
+    let decision = decide_with(
+        root,
+        "origin/main..HEAD",
+        &SemverChecks::with_program(&cargo),
+        false,
+    )
+    .expect("decide");
+    assert_eq!(decision.to, "5.0.0");
+    assert_eq!(decision.bump, "major");
+    assert!(
+        decision
+            .reason
+            .contains("cargo semver-checks reported a major-requiring change"),
+        "reason: {}",
+        decision.reason
+    );
+}
+
+#[test]
+fn semver_checks_clean_run_leaves_the_commit_signal_in_charge() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    init_repo(root);
+    let cargo = stub_cargo(root, 0, 0);
+    commit(
+        root,
+        "crates/demo/src/lib.rs",
+        "pub fn api() {}\npub fn added() {}\n",
+        "feat(demo): add to the api",
+    );
+
+    let decision = decide_with(
+        root,
+        "origin/main..HEAD",
+        &SemverChecks::with_program(&cargo),
+        false,
+    )
+    .expect("decide");
+    assert_eq!(decision.to, "4.1.0");
+    assert_eq!(decision.bump, "minor");
+}
+
+#[test]
+fn a_missing_semver_checks_fails_the_decision_instead_of_downgrading_it() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    init_repo(root);
+    let cargo = stub_cargo(root, 1, 0);
+    commit(
+        root,
+        "crates/demo/src/lib.rs",
+        "pub fn api4() {}\n",
+        "fix(demo): tweak the api",
+    );
+
+    let err = decide_with(
+        root,
+        "origin/main..HEAD",
+        &SemverChecks::with_program(&cargo),
+        false,
+    )
+    .expect_err("the public-API gate must not be skipped silently");
+    let msg = err.to_string();
+    assert!(
+        msg.contains("cargo-semver-checks is not installed"),
+        "{msg}"
+    );
+    assert!(msg.contains(ALLOW_MISSING_ENV), "{msg}");
 }

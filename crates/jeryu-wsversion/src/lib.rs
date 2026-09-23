@@ -36,11 +36,14 @@ pub mod decide;
 pub mod outcome;
 pub mod semver;
 
-pub use api_surface::{ApiSurfaceReport, api_breaking, detect_public_api_candidates};
+pub use api_surface::{
+    ALLOW_MISSING_ENV, ApiSurfaceReport, SemverChecks, api_breaking, api_breaking_with,
+    detect_public_api_candidates,
+};
 pub use cargo_edit::{assert_members_inherit, read_workspace_version, write_workspace_version};
 pub use changelog::roll_unreleased;
 pub use classify::{Bump, classify_commit, classify_range};
 pub use commits::{ConventionalCommit, SKIP_VERSION_SENTINEL, commits_in_range};
-pub use decide::{Decision, apply, decide};
+pub use decide::{Decision, apply, decide, decide_with};
 pub use outcome::GateOutcome;
 pub use semver::Version;
