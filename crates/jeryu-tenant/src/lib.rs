@@ -99,6 +99,8 @@ impl QuotaUsage {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TenantPolicyInput {
     pub tenant: TenantId,
+    /// Tenant owning the resource the action targets. `None` means the actor's own tenant.
+    pub resource_tenant: Option<TenantId>,
     pub actor: String,
     pub role: Role,
     pub action: TenantAction,
@@ -111,8 +113,9 @@ impl TenantPolicyInput {
     /// JSON representation.
     pub fn to_json(&self) -> String {
         format!(
-            "{{\"tenant\":{},\"actor\":{},\"role\":{},\"action\":{},\"repos\":{},\"runners\":{},\"storage_gib\":{},\"audit_exports_today\":{}}}",
+            "{{\"tenant\":{},\"resource_tenant\":{},\"actor\":{},\"role\":{},\"action\":{},\"repos\":{},\"runners\":{},\"storage_gib\":{},\"audit_exports_today\":{}}}",
             quote(self.tenant.as_str()),
+            quote(self.resource_tenant.as_ref().unwrap_or(&self.tenant).as_str()),
             quote(&self.actor),
             quote(self.role.as_str()),
             quote(self.action.as_str()),
@@ -128,6 +131,14 @@ impl TenantPolicyInput {
 pub fn decide(input: &TenantPolicyInput, ledger: &mut AuditLedger) -> PolicyDecision {
     if input.actor.trim().is_empty() {
         return deny("tenant.actor_missing", "actor is required");
+    }
+    if let Some(resource_tenant) = &input.resource_tenant
+        && resource_tenant != &input.tenant
+    {
+        return deny(
+            "tenant.cross_tenant_denied",
+            "actor may not act on another tenant's resource",
+        );
     }
     if over_quota(&input.usage, &input.quota) {
         return deny("tenant.quota_exceeded", "tenant is over quota");
@@ -210,6 +221,7 @@ mod tests {
         let mut ledger = AuditLedger::new();
         let input = TenantPolicyInput {
             tenant: TenantId::new("tenant-a").unwrap_or_else(|_| panic!("valid")),
+            resource_tenant: None,
             actor: "alice".to_string(),
             role: Role::Viewer,
             action: TenantAction::UpdateQuota,
@@ -225,6 +237,7 @@ mod tests {
         let mut ledger = AuditLedger::new();
         let input = TenantPolicyInput {
             tenant: TenantId::new("tenant-a").unwrap_or_else(|_| panic!("valid")),
+            resource_tenant: None,
             actor: "auditor".to_string(),
             role: Role::Auditor,
             action: TenantAction::ExportCompliance,
@@ -241,6 +254,7 @@ mod tests {
         let mut ledger = AuditLedger::new();
         let input = TenantPolicyInput {
             tenant: TenantId::new("tenant-a").unwrap_or_else(|_| panic!("valid")),
+            resource_tenant: None,
             actor: "  ".to_string(),
             role: Role::Admin,
             action: TenantAction::UpdateQuota,
@@ -259,6 +273,7 @@ mod tests {
         let mut ledger = AuditLedger::new();
         let input = TenantPolicyInput {
             tenant: TenantId::new("tenant-a").unwrap_or_else(|_| panic!("valid")),
+            resource_tenant: None,
             actor: "admin".to_string(),
             role: Role::Admin,
             action: TenantAction::UpdateQuota,
@@ -286,6 +301,7 @@ mod tests {
         let mut ledger = AuditLedger::new();
         let mut input = TenantPolicyInput {
             tenant: TenantId::new("tenant-a").unwrap_or_else(|_| panic!("valid")),
+            resource_tenant: None,
             actor: "incident-commander".to_string(),
             role: Role::BreakGlass,
             action: TenantAction::ApplyUpgrade,
@@ -308,6 +324,7 @@ mod tests {
         let mut ledger = AuditLedger::new();
         let input = TenantPolicyInput {
             tenant: TenantId::new("tenant-a").unwrap_or_else(|_| panic!("valid")),
+            resource_tenant: None,
             actor: "admin".to_string(),
             role: Role::Admin,
             action: TenantAction::ApplyUpgrade,
@@ -324,6 +341,7 @@ mod tests {
     fn policy_input_json_names_role_action_and_usage() {
         let input = TenantPolicyInput {
             tenant: TenantId::new("tenant-a").unwrap_or_else(|_| panic!("valid")),
+            resource_tenant: None,
             actor: "auditor".to_string(),
             role: Role::Auditor,
             action: TenantAction::ReadReplay,
@@ -341,5 +359,176 @@ mod tests {
         assert!(json.contains("\"action\":\"read_replay\""));
         assert!(json.contains("\"repos\":3"));
         assert!(json.contains("\"audit_exports_today\":6"));
+    }
+
+    fn tenant(id: &str) -> TenantId {
+        TenantId::new(id).unwrap_or_else(|_| panic!("valid"))
+    }
+
+    fn cross_tenant_input(actor_tenant: &str, resource_tenant: &str, role: Role) -> TenantPolicyInput {
+        TenantPolicyInput {
+            tenant: tenant(actor_tenant),
+            resource_tenant: Some(tenant(resource_tenant)),
+            actor: "alice".to_string(),
+            role,
+            action: TenantAction::ReadEvidence,
+            quota: QuotaLimit::default(),
+            usage: QuotaUsage::zero(),
+            break_glass_ticket: None,
+        }
+    }
+
+    #[test]
+    fn reading_another_tenants_evidence_is_denied_without_receipt() {
+        let mut ledger = AuditLedger::new();
+        let decision = decide(&cross_tenant_input("tenant-a", "tenant-b", Role::Viewer), &mut ledger);
+        assert!(!decision.is_allowed());
+        assert!(format!("{decision:?}").contains("tenant.cross_tenant_denied"));
+        assert!(ledger.receipts().is_empty());
+    }
+
+    #[test]
+    fn every_role_is_denied_across_tenants() {
+        let mut ledger = AuditLedger::new();
+        for role in [
+            Role::Viewer,
+            Role::Operator,
+            Role::Auditor,
+            Role::Admin,
+            Role::BreakGlass,
+        ] {
+            let mut input = cross_tenant_input("tenant-a", "tenant-b", role);
+            input.break_glass_ticket = Some("INC-1234".to_string());
+            let decision = decide(&input, &mut ledger);
+            assert!(
+                !decision.is_allowed(),
+                "role {} must not reach another tenant",
+                role.as_str()
+            );
+        }
+        assert!(ledger.receipts().is_empty());
+    }
+
+    #[test]
+    fn every_action_is_denied_across_tenants() {
+        let mut ledger = AuditLedger::new();
+        for action in [
+            TenantAction::ReadEvidence,
+            TenantAction::ExportCompliance,
+            TenantAction::PlanUpgrade,
+            TenantAction::ApplyUpgrade,
+            TenantAction::PlanRollback,
+            TenantAction::UpdateQuota,
+            TenantAction::ReadReplay,
+        ] {
+            let mut input = cross_tenant_input("tenant-a", "tenant-b", Role::Admin);
+            input.action = action;
+            assert!(
+                !decide(&input, &mut ledger).is_allowed(),
+                "action {} must not cross a tenant boundary",
+                action.as_str()
+            );
+        }
+        assert!(ledger.receipts().is_empty());
+    }
+
+    #[test]
+    fn isolation_denies_before_quota_and_role_checks() {
+        let mut ledger = AuditLedger::new();
+        let mut input = cross_tenant_input("tenant-a", "tenant-b", Role::Viewer);
+        input.action = TenantAction::UpdateQuota;
+        input.usage = QuotaUsage {
+            repos: u32::MAX,
+            runners: 0,
+            storage_gib: 0,
+            audit_exports_today: 0,
+        };
+        let decision = decide(&input, &mut ledger);
+        assert!(format!("{decision:?}").contains("tenant.cross_tenant_denied"));
+    }
+
+    #[test]
+    fn acting_on_own_tenant_named_explicitly_is_allowed() {
+        let mut ledger = AuditLedger::new();
+        let decision = decide(&cross_tenant_input("tenant-a", "tenant-a", Role::Viewer), &mut ledger);
+        assert!(decision.is_allowed());
+        assert_eq!(ledger.receipts().len(), 1);
+        assert_eq!(ledger.receipts()[0].tenant, "tenant-a");
+    }
+
+    #[test]
+    fn tenant_ids_are_matched_exactly_not_by_prefix() {
+        let mut ledger = AuditLedger::new();
+        let decision = decide(&cross_tenant_input("tenant-a", "tenant-ab", Role::Admin), &mut ledger);
+        assert!(!decision.is_allowed());
+        assert!(format!("{decision:?}").contains("tenant.cross_tenant_denied"));
+    }
+
+    #[test]
+    fn a_shared_ledger_keeps_each_tenants_receipts_distinct() {
+        let mut ledger = AuditLedger::new();
+        for id in ["tenant-a", "tenant-b"] {
+            let input = TenantPolicyInput {
+                tenant: tenant(id),
+                resource_tenant: None,
+                actor: "auditor".to_string(),
+                role: Role::Auditor,
+                action: TenantAction::ExportCompliance,
+                quota: QuotaLimit::default(),
+                usage: QuotaUsage::zero(),
+                break_glass_ticket: None,
+            };
+            assert!(decide(&input, &mut ledger).is_allowed());
+        }
+        let for_a: Vec<_> = ledger
+            .receipts()
+            .iter()
+            .filter(|receipt| receipt.tenant == "tenant-a")
+            .collect();
+        assert_eq!(for_a.len(), 1);
+        assert_eq!(ledger.receipts().len(), 2);
+        assert_ne!(ledger.receipts()[0].id, ledger.receipts()[1].id);
+    }
+
+    #[test]
+    fn one_tenant_over_quota_does_not_block_another() {
+        let mut ledger = AuditLedger::new();
+        let tight = QuotaLimit {
+            max_repos: 1,
+            max_runners: 1,
+            max_storage_gib: 1,
+            max_audit_exports_per_day: 1,
+        };
+        let mut over = TenantPolicyInput {
+            tenant: tenant("tenant-a"),
+            resource_tenant: None,
+            actor: "auditor".to_string(),
+            role: Role::Auditor,
+            action: TenantAction::ExportCompliance,
+            quota: tight,
+            usage: QuotaUsage {
+                repos: 2,
+                runners: 0,
+                storage_gib: 0,
+                audit_exports_today: 0,
+            },
+            break_glass_ticket: None,
+        };
+        assert!(!decide(&over, &mut ledger).is_allowed());
+
+        over.tenant = tenant("tenant-b");
+        over.quota = QuotaLimit::default();
+        over.usage = QuotaUsage::zero();
+        assert!(decide(&over, &mut ledger).is_allowed());
+        assert_eq!(ledger.receipts().len(), 1);
+        assert_eq!(ledger.receipts()[0].tenant, "tenant-b");
+    }
+
+    #[test]
+    fn policy_input_json_names_the_targeted_tenant() {
+        let input = cross_tenant_input("tenant-a", "tenant-b", Role::Viewer);
+        let json = input.to_json();
+        assert!(json.contains("\"tenant\":\"tenant-a\""));
+        assert!(json.contains("\"resource_tenant\":\"tenant-b\""));
     }
 }

@@ -48,6 +48,7 @@ pub fn readiness(tenant: TenantId, actor: &str) -> Phase11Readiness {
     let tenant_decision = decide(
         &TenantPolicyInput {
             tenant: tenant.clone(),
+            resource_tenant: None,
             actor: actor.to_string(),
             role: Role::Auditor,
             action: TenantAction::ExportCompliance,
