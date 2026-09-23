@@ -105,27 +105,12 @@
       "lane": "check",
       "purpose": "verify jeryu-release-ops owned source remains build-addressable"
     },
-    "crates/jeryu-compliance-export/": {
-      "command": "just check",
-      "lane": "check",
-      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
-    },
     "crates/jeryu-evidence/": {
       "command": "just check",
       "lane": "check",
       "purpose": "verify jeryu-release-ops owned source remains build-addressable"
     },
     "crates/jeryu-git-guard/": {
-      "command": "just check",
-      "lane": "check",
-      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
-    },
-    "crates/jeryu-kernel/": {
-      "command": "just check",
-      "lane": "check",
-      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
-    },
-    "crates/jeryu-lifecycle/": {
       "command": "just check",
       "lane": "check",
       "purpose": "verify jeryu-release-ops owned source remains build-addressable"
@@ -140,22 +125,7 @@
       "lane": "check",
       "purpose": "verify jeryu-release-ops owned source remains build-addressable"
     },
-    "crates/jeryu-ops/": {
-      "command": "just check",
-      "lane": "check",
-      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
-    },
-    "crates/jeryu-phase11-audit/": {
-      "command": "just check",
-      "lane": "check",
-      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
-    },
     "crates/jeryu-phase11-core/": {
-      "command": "just check",
-      "lane": "check",
-      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
-    },
-    "crates/jeryu-replay-verifier/": {
       "command": "just check",
       "lane": "check",
       "purpose": "verify jeryu-release-ops owned source remains build-addressable"
@@ -171,11 +141,6 @@
       "purpose": "verify jeryu-release-ops owned source remains build-addressable"
     },
     "crates/jeryu-signrail/": {
-      "command": "just check",
-      "lane": "check",
-      "purpose": "verify jeryu-release-ops owned source remains build-addressable"
-    },
-    "crates/jeryu-tenant/": {
       "command": "just check",
       "lane": "check",
       "purpose": "verify jeryu-release-ops owned source remains build-addressable"

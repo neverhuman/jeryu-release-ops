@@ -1,15 +1,12 @@
-#![forbid(unsafe_code)]
-#![doc = "Phase 11 orchestration kernel that ties operations, compliance, lifecycle, tenant guard, and replay verification together."]
+//! Phase 11 orchestration kernel that ties operations, compliance, lifecycle, tenant guard, and replay verification together.
 
-use jeryu_compliance_export::{EvidenceRecord, default_controls, export_bundle, validate_bundle};
-use jeryu_lifecycle::{default_phase11_migrations, plan_rollback, plan_upgrade};
-use jeryu_ops::{ServiceSignal, SloThresholds, evaluate_operations};
-use jeryu_phase11_audit::{AuditKind, AuditLedger, record};
-use jeryu_phase11_core::{
-    ExportFormat, Finding, PolicyDecision, Report, Severity, TenantId, Version, quote,
-};
-use jeryu_replay_verifier::{fixture_claim, verify_claim};
-use jeryu_tenant::{QuotaLimit, QuotaUsage, Role, TenantAction, TenantPolicyInput, decide};
+use crate::audit::{AuditKind, AuditLedger, record};
+use crate::compliance_export::{EvidenceRecord, default_controls, export_bundle, validate_bundle};
+use crate::lifecycle::{default_phase11_migrations, plan_rollback, plan_upgrade};
+use crate::ops::{ServiceSignal, SloThresholds, evaluate_operations};
+use crate::replay_verifier::{fixture_claim, verify_claim};
+use crate::tenant::{QuotaLimit, QuotaUsage, Role, TenantAction, TenantPolicyInput, decide};
+use crate::{ExportFormat, Finding, PolicyDecision, Report, Severity, TenantId, Version, quote};
 
 /// Top-level readiness output.
 #[derive(Debug, Clone)]

@@ -60,14 +60,7 @@ That lane is non-promoting: deployment and production mutation remain owned by
 - `crates/jeryu-evidence`
 - `crates/jeryu-obs`
 - `crates/jeryu-bench`
-- `crates/jeryu-ops`
 - `crates/jeryu-phase11-core`
-- `crates/jeryu-phase11-audit`
-- `crates/jeryu-compliance-export`
-- `crates/jeryu-lifecycle`
-- `crates/jeryu-tenant`
-- `crates/jeryu-kernel`
-- `crates/jeryu-replay-verifier`
 - `crates/jeryu-git-guard`
 - `bins/jeryu-phase11-bin`
 
@@ -81,14 +74,7 @@ That lane is non-promoting: deployment and production mutation remain owned by
 - `crates/jeryu-evidence/**`
 - `crates/jeryu-obs/**`
 - `crates/jeryu-bench/**`
-- `crates/jeryu-ops/**`
 - `crates/jeryu-phase11-core/**`
-- `crates/jeryu-phase11-audit/**`
-- `crates/jeryu-compliance-export/**`
-- `crates/jeryu-lifecycle/**`
-- `crates/jeryu-tenant/**`
-- `crates/jeryu-kernel/**`
-- `crates/jeryu-replay-verifier/**`
 - `crates/jeryu-git-guard/**`
 - `bins/jeryu-phase11-bin/**`
 - `bench/**`

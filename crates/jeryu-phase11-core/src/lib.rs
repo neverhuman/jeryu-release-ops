@@ -1,10 +1,17 @@
 #![forbid(unsafe_code)]
-#![doc = "Shared Phase 11 domain types, deterministic hashing, and JSON helpers."]
+#![doc = "Phase 11 domain types and the layers built on them: audit, operations, compliance export, lifecycle, tenant guard, replay verification, and the orchestration kernel."]
 
+pub mod audit;
+pub mod compliance_export;
 mod ids;
 mod json;
+pub mod kernel;
+pub mod lifecycle;
+pub mod ops;
+pub mod replay_verifier;
 mod report;
 mod severity;
+pub mod tenant;
 mod validation;
 
 pub use ids::{Digest, ExportFormat, TenantId, UpgradeRing, Version};
@@ -49,5 +56,26 @@ mod tests {
     #[test]
     fn quote_escapes_control_characters() {
         assert_eq!(quote("a\"b\\c\n"), "\"a\\\"b\\\\c\\n\"");
+    }
+
+    #[test]
+    fn one_readiness_run_carries_a_receipt_from_every_module() {
+        let tenant = TenantId::new("tenant-a").unwrap_or_else(|_| panic!("valid"));
+        let readiness = kernel::readiness(tenant, "ops-bot");
+        for kind in [
+            audit::AuditKind::TenantDecision,
+            audit::AuditKind::Operation,
+            audit::AuditKind::UpgradePlan,
+            audit::AuditKind::RollbackPlan,
+            audit::AuditKind::ReplayVerification,
+            audit::AuditKind::ComplianceExport,
+            audit::AuditKind::Readiness,
+        ] {
+            assert!(
+                readiness.audit_receipts_json.contains(kind.as_str()),
+                "no {} receipt in the shared ledger",
+                kind.as_str()
+            );
+        }
     }
 }

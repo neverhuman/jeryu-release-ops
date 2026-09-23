@@ -1,8 +1,7 @@
-#![forbid(unsafe_code)]
-#![doc = "Tenant quotas, RBAC, isolation checks, and fail-closed policy decisions."]
+//! Tenant quotas, RBAC, isolation checks, and fail-closed policy decisions.
 
-use jeryu_phase11_audit::{AuditKind, AuditLedger, record};
-use jeryu_phase11_core::{Finding, PolicyDecision, Severity, TenantId, quote};
+use crate::audit::{AuditKind, AuditLedger, record};
+use crate::{Finding, PolicyDecision, Severity, TenantId, quote};
 
 /// Operator role.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -115,7 +114,12 @@ impl TenantPolicyInput {
         format!(
             "{{\"tenant\":{},\"resource_tenant\":{},\"actor\":{},\"role\":{},\"action\":{},\"repos\":{},\"runners\":{},\"storage_gib\":{},\"audit_exports_today\":{}}}",
             quote(self.tenant.as_str()),
-            quote(self.resource_tenant.as_ref().unwrap_or(&self.tenant).as_str()),
+            quote(
+                self.resource_tenant
+                    .as_ref()
+                    .unwrap_or(&self.tenant)
+                    .as_str()
+            ),
             quote(&self.actor),
             quote(self.role.as_str()),
             quote(self.action.as_str()),
@@ -365,7 +369,11 @@ mod tests {
         TenantId::new(id).unwrap_or_else(|_| panic!("valid"))
     }
 
-    fn cross_tenant_input(actor_tenant: &str, resource_tenant: &str, role: Role) -> TenantPolicyInput {
+    fn cross_tenant_input(
+        actor_tenant: &str,
+        resource_tenant: &str,
+        role: Role,
+    ) -> TenantPolicyInput {
         TenantPolicyInput {
             tenant: tenant(actor_tenant),
             resource_tenant: Some(tenant(resource_tenant)),
@@ -381,7 +389,10 @@ mod tests {
     #[test]
     fn reading_another_tenants_evidence_is_denied_without_receipt() {
         let mut ledger = AuditLedger::new();
-        let decision = decide(&cross_tenant_input("tenant-a", "tenant-b", Role::Viewer), &mut ledger);
+        let decision = decide(
+            &cross_tenant_input("tenant-a", "tenant-b", Role::Viewer),
+            &mut ledger,
+        );
         assert!(!decision.is_allowed());
         assert!(format!("{decision:?}").contains("tenant.cross_tenant_denied"));
         assert!(ledger.receipts().is_empty());
@@ -450,7 +461,10 @@ mod tests {
     #[test]
     fn acting_on_own_tenant_named_explicitly_is_allowed() {
         let mut ledger = AuditLedger::new();
-        let decision = decide(&cross_tenant_input("tenant-a", "tenant-a", Role::Viewer), &mut ledger);
+        let decision = decide(
+            &cross_tenant_input("tenant-a", "tenant-a", Role::Viewer),
+            &mut ledger,
+        );
         assert!(decision.is_allowed());
         assert_eq!(ledger.receipts().len(), 1);
         assert_eq!(ledger.receipts()[0].tenant, "tenant-a");
@@ -459,7 +473,10 @@ mod tests {
     #[test]
     fn tenant_ids_are_matched_exactly_not_by_prefix() {
         let mut ledger = AuditLedger::new();
-        let decision = decide(&cross_tenant_input("tenant-a", "tenant-ab", Role::Admin), &mut ledger);
+        let decision = decide(
+            &cross_tenant_input("tenant-a", "tenant-ab", Role::Admin),
+            &mut ledger,
+        );
         assert!(!decision.is_allowed());
         assert!(format!("{decision:?}").contains("tenant.cross_tenant_denied"));
     }

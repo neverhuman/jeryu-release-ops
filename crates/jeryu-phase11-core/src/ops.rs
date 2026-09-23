@@ -1,8 +1,7 @@
-#![forbid(unsafe_code)]
-#![doc = "Operational health evaluation, runbook matching, and remediation planning."]
+//! Operational health evaluation, runbook matching, and remediation planning.
 
-use jeryu_phase11_audit::{AuditKind, AuditLedger, record};
-use jeryu_phase11_core::{Finding, HealthState, Report, Severity, TenantId, quote};
+use crate::audit::{AuditKind, AuditLedger, record};
+use crate::{Finding, HealthState, Report, Severity, TenantId, quote};
 
 /// A measured service signal.
 #[derive(Debug, Clone, PartialEq)]

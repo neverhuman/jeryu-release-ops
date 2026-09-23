@@ -1,9 +1,6 @@
-#![forbid(unsafe_code)]
-#![doc = "Append-only audit and receipt primitives for Phase 11."]
+//! Append-only audit and receipt primitives for Phase 11.
 
-use jeryu_phase11_core::{
-    Digest, Finding, Severity, TenantId, json_array, now_unix_seconds, quote,
-};
+use crate::{Digest, Finding, Severity, TenantId, json_array, now_unix_seconds, quote};
 
 /// Audit event categories.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -1,10 +1,7 @@
-#![forbid(unsafe_code)]
-#![doc = "Version lifecycle, upgrade ring, migration, and rollback planning."]
+//! Version lifecycle, upgrade ring, migration, and rollback planning.
 
-use jeryu_phase11_audit::{AuditKind, AuditLedger, record};
-use jeryu_phase11_core::{
-    Finding, Report, Severity, TenantId, UpgradeRing, Version, json_array, quote,
-};
+use crate::audit::{AuditKind, AuditLedger, record};
+use crate::{Finding, Report, Severity, TenantId, UpgradeRing, Version, json_array, quote};
 
 /// Migration step with idempotency and rollback metadata.
 #[derive(Debug, Clone, PartialEq, Eq)]

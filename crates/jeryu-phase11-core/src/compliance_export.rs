@@ -1,10 +1,7 @@
-#![forbid(unsafe_code)]
-#![doc = "Compliance evidence bundle construction and validation."]
+//! Compliance evidence bundle construction and validation.
 
-use jeryu_phase11_audit::{AuditKind, AuditLedger, record};
-use jeryu_phase11_core::{
-    Digest, ExportFormat, Finding, Report, Severity, TenantId, json_array, quote,
-};
+use crate::audit::{AuditKind, AuditLedger, record};
+use crate::{Digest, ExportFormat, Finding, Report, Severity, TenantId, json_array, quote};
 
 /// Compliance control families supported by Phase 11.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

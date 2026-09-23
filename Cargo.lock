@@ -579,14 +579,6 @@ name = "jeryu-bench"
 version = "5.0.0"
 
 [[package]]
-name = "jeryu-compliance-export"
-version = "5.0.0"
-dependencies = [
- "jeryu-phase11-audit",
- "jeryu-phase11-core",
-]
-
-[[package]]
 name = "jeryu-evidence"
 version = "5.0.0"
 dependencies = [
@@ -599,27 +591,6 @@ dependencies = [
 [[package]]
 name = "jeryu-git-guard"
 version = "5.0.0"
-
-[[package]]
-name = "jeryu-kernel"
-version = "5.0.0"
-dependencies = [
- "jeryu-compliance-export",
- "jeryu-lifecycle",
- "jeryu-ops",
- "jeryu-phase11-audit",
- "jeryu-phase11-core",
- "jeryu-replay-verifier",
- "jeryu-tenant",
-]
-
-[[package]]
-name = "jeryu-lifecycle"
-version = "5.0.0"
-dependencies = [
- "jeryu-phase11-audit",
- "jeryu-phase11-core",
-]
 
 [[package]]
 name = "jeryu-mapcheck"
@@ -642,39 +613,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "jeryu-ops"
-version = "5.0.0"
-dependencies = [
- "jeryu-phase11-audit",
- "jeryu-phase11-core",
-]
-
-[[package]]
-name = "jeryu-phase11-audit"
-version = "5.0.0"
-dependencies = [
- "jeryu-phase11-core",
-]
-
-[[package]]
 name = "jeryu-phase11-bin"
 version = "5.0.0"
 dependencies = [
- "jeryu-kernel",
  "jeryu-phase11-core",
 ]
 
 [[package]]
 name = "jeryu-phase11-core"
 version = "5.0.0"
-
-[[package]]
-name = "jeryu-replay-verifier"
-version = "5.0.0"
-dependencies = [
- "jeryu-phase11-audit",
- "jeryu-phase11-core",
-]
 
 [[package]]
 name = "jeryu-repogate"
@@ -713,14 +660,6 @@ version = "5.0.0"
 dependencies = [
  "jeryu-signing",
  "serde_json",
-]
-
-[[package]]
-name = "jeryu-tenant"
-version = "5.0.0"
-dependencies = [
- "jeryu-phase11-audit",
- "jeryu-phase11-core",
 ]
 
 [[package]]

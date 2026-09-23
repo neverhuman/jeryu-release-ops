@@ -1,8 +1,7 @@
-#![forbid(unsafe_code)]
-#![doc = "Replay verifier for benchmark, provenance, cache-safety, and release claims."]
+//! Replay verifier for benchmark, provenance, cache-safety, and release claims.
 
-use jeryu_phase11_audit::{AuditKind, AuditLedger, record};
-use jeryu_phase11_core::{Digest, Finding, Report, Severity, TenantId, quote};
+use crate::audit::{AuditKind, AuditLedger, record};
+use crate::{Digest, Finding, Report, Severity, TenantId, quote};
 
 /// A benchmark or provenance claim that must be replayable.
 #[derive(Debug, Clone, PartialEq)]

@@ -19,31 +19,34 @@ fn main() -> ExitCode {
 
     match command {
         "readiness" => {
-            println!("{}", jeryu_kernel::readiness(tenant, &actor).to_json());
+            println!(
+                "{}",
+                jeryu_phase11_core::kernel::readiness(tenant, &actor).to_json()
+            );
             ExitCode::SUCCESS
         }
         "evidence" => {
-            let report = jeryu_kernel::readiness(tenant, &actor);
+            let report = jeryu_phase11_core::kernel::readiness(tenant, &actor);
             println!("{}", report.compliance_json);
             ExitCode::SUCCESS
         }
         "upgrade" => {
-            let report = jeryu_kernel::readiness(tenant, &actor);
+            let report = jeryu_phase11_core::kernel::readiness(tenant, &actor);
             println!("{}", report.lifecycle_json);
             ExitCode::SUCCESS
         }
         "replay" => {
-            let report = jeryu_kernel::readiness(tenant, &actor);
+            let report = jeryu_phase11_core::kernel::readiness(tenant, &actor);
             println!("{}", report.replay_json);
             ExitCode::SUCCESS
         }
         "help" | "--help" | "-h" => {
-            println!("{}", jeryu_kernel::help());
+            println!("{}", jeryu_phase11_core::kernel::help());
             ExitCode::SUCCESS
         }
         other => {
             eprintln!("unknown command: {}", other);
-            eprintln!("{}", jeryu_kernel::help());
+            eprintln!("{}", jeryu_phase11_core::kernel::help());
             ExitCode::from(2)
         }
     }
