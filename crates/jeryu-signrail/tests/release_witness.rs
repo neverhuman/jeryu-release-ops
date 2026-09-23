@@ -15,3 +15,7 @@ use support::*;
 mod cli;
 #[path = "release_witness/policy.rs"]
 mod policy;
+#[path = "release_witness/sign_cli.rs"]
+mod sign_cli;
+#[path = "release_witness/verify_cli.rs"]
+mod verify_cli;
