@@ -11,8 +11,13 @@
 //! field of [`Signature`]):
 //! - `unsigned` — no cryptographic signature has been applied; rejected by
 //!   enforcement-mode verifiers in the consuming crates.
-//! - `hmac-sha256-insecure` — symmetric HMAC; not enforcement-grade (any holder
-//!   of the shared secret can forge it); rejected in enforcement.
+//! - `hmac-sha256` — symmetric HMAC-SHA-256 (RFC 2104) over the body; the
+//!   algo [`SigningKey::sign`] emits. Not enforcement-grade (any holder of the
+//!   shared secret can forge it); rejected in enforcement.
+//! - `hmac-sha256-insecure` — the earlier symmetric path, a bare
+//!   `SHA256(secret || body || secret)` envelope rather than an HMAC. Still
+//!   verified (in constant time) so signatures already on disk stay
+//!   verifiable, but never emitted for new signatures; rejected in enforcement.
 //! - `ed25519` — real per-agent ed25519 signing via [`EdSigningKey`]; accepted
 //!   by enforcement-mode verifiers.
 //!
@@ -23,8 +28,20 @@
 #![forbid(unsafe_code)]
 
 use ed25519_dalek::{Signer, SigningKey as DalekSigningKey, Verifier, VerifyingKey};
+use hmac::{Hmac, Mac};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use subtle::ConstantTimeEq;
+
+type HmacSha256 = Hmac<Sha256>;
+
+/// Wire `algo` of a real HMAC-SHA-256 signature, as emitted by
+/// [`SigningKey::sign`].
+pub const ALGO_HMAC_SHA256: &str = "hmac-sha256";
+
+/// Wire `algo` of the earlier `SHA256(secret || body || secret)` envelope.
+/// Verify-only: [`SigningKey::verify`] accepts it, nothing emits it.
+pub const ALGO_HMAC_SHA256_ENVELOPE: &str = "hmac-sha256-insecure";
 
 /// Wire-format signature object carried by every receipt, ledger entry, and
 /// verdict. The field names (`key_id`, `algo`, `value`) are frozen: objects are
@@ -58,9 +75,9 @@ impl Signature {
     }
 }
 
-/// Symmetric HMAC-SHA256 key. NOT enforcement-grade: any holder of the shared
-/// secret can forge a signature, so enforcement-mode verifiers reject its
-/// `hmac-sha256-insecure` algo. Retained for the refuse-lists and low-trust paths.
+/// Symmetric HMAC-SHA-256 key. NOT enforcement-grade: any holder of the shared
+/// secret can forge a signature, so enforcement-mode verifiers reject both of
+/// its algos. Retained for the refuse-lists and low-trust paths.
 pub struct SigningKey {
     pub key_id: String,
     pub secret: Vec<u8>,
@@ -74,25 +91,53 @@ impl SigningKey {
         }
     }
 
-    /// HMAC-SHA-256 over `body`. NOT cryptographically equivalent to ed25519.
+    /// HMAC-SHA-256 (RFC 2104) over `body`, emitted with
+    /// `algo: "hmac-sha256"`. NOT cryptographically equivalent to ed25519.
     pub fn sign(&self, body: &[u8]) -> Signature {
+        let mut mac = HmacSha256::new_from_slice(&self.secret)
+            .expect("HMAC-SHA-256 accepts a key of any length");
+        mac.update(body);
+        Signature {
+            key_id: self.key_id.clone(),
+            algo: ALGO_HMAC_SHA256.into(),
+            value: hex::encode(mac.finalize().into_bytes()),
+        }
+    }
+
+    /// Verify `body` against `sig` in constant time. Accepts both symmetric
+    /// algos: `hmac-sha256`, and the `hmac-sha256-insecure` envelope so
+    /// signatures written before the HMAC path existed still verify.
+    pub fn verify(&self, body: &[u8], sig: &Signature) -> bool {
+        if sig.key_id != self.key_id {
+            return false;
+        }
+        let Ok(value) = hex::decode(&sig.value) else {
+            return false;
+        };
+        match sig.algo.as_str() {
+            ALGO_HMAC_SHA256 => {
+                let mut mac = HmacSha256::new_from_slice(&self.secret)
+                    .expect("HMAC-SHA-256 accepts a key of any length");
+                mac.update(body);
+                mac.verify_slice(&value).is_ok()
+            }
+            ALGO_HMAC_SHA256_ENVELOPE => {
+                let expected = self.sha256_envelope(body);
+                expected.ct_eq(value.as_slice()).into()
+            }
+            _ => false,
+        }
+    }
+
+    /// `SHA256(secret || body || secret)` — the digest under the
+    /// `hmac-sha256-insecure` algo. Verify-only; kept private so no new call
+    /// site can produce one.
+    fn sha256_envelope(&self, body: &[u8]) -> Vec<u8> {
         let mut h = Sha256::new();
         h.update(&self.secret);
         h.update(body);
         h.update(&self.secret);
-        Signature {
-            key_id: self.key_id.clone(),
-            algo: "hmac-sha256-insecure".into(),
-            value: hex::encode(h.finalize()),
-        }
-    }
-
-    pub fn verify(&self, body: &[u8], sig: &Signature) -> bool {
-        if sig.algo != "hmac-sha256-insecure" || sig.key_id != self.key_id {
-            return false;
-        }
-        let expected = self.sign(body);
-        expected.value == sig.value
+        h.finalize().to_vec()
     }
 }
 
@@ -224,14 +269,118 @@ mod tests {
         assert_eq!(Signature::default_unsigned(), s);
     }
 
+    /// Build a signature in the `hmac-sha256-insecure` envelope shape, as a
+    /// pre-HMAC signer on disk would have written it.
+    fn envelope_signature(key_id: &str, secret: &[u8], body: &[u8]) -> Signature {
+        let mut h = Sha256::new();
+        h.update(secret);
+        h.update(body);
+        h.update(secret);
+        Signature {
+            key_id: key_id.into(),
+            algo: ALGO_HMAC_SHA256_ENVELOPE.into(),
+            value: hex::encode(h.finalize()),
+        }
+    }
+
     #[test]
     fn hmac_sign_and_verify() {
         let k = SigningKey::new("k1", b"super-secret".to_vec());
         let body = b"hello world";
         let sig = k.sign(body);
-        assert_eq!(sig.algo, "hmac-sha256-insecure");
+        assert_eq!(sig.algo, "hmac-sha256");
         assert!(k.verify(body, &sig));
         assert!(!k.verify(b"tampered", &sig));
+    }
+
+    #[test]
+    fn hmac_matches_rfc4231_test_case_1() {
+        // RFC 4231 §4.2: key = 0x0b x20, data = "Hi There".
+        let k = SigningKey::new("rfc", vec![0x0b; 20]);
+        assert_eq!(
+            k.sign(b"Hi There").value,
+            "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7"
+        );
+    }
+
+    #[test]
+    fn hmac_matches_rfc4231_test_case_2() {
+        // RFC 4231 §4.3: key = "Jefe", data = "what do ya want for nothing?".
+        let k = SigningKey::new("rfc", b"Jefe".to_vec());
+        assert_eq!(
+            k.sign(b"what do ya want for nothing?").value,
+            "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"
+        );
+    }
+
+    #[test]
+    fn hmac_matches_rfc4231_test_case_3() {
+        // RFC 4231 §4.4: key = 0xaa x20, data = 0xdd x50.
+        let k = SigningKey::new("rfc", vec![0xaa; 20]);
+        assert_eq!(
+            k.sign(&[0xdd; 50]).value,
+            "773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe"
+        );
+    }
+
+    #[test]
+    fn hmac_key_longer_than_block_is_accepted() {
+        // RFC 4231 §4.6 exercises a 131-byte key; the key length must not panic.
+        let k = SigningKey::new("rfc", vec![0xaa; 131]);
+        let sig = k.sign(b"Test Using Larger Than Block-Size Key - Hash Key First");
+        assert_eq!(
+            sig.value,
+            "60e431591ee0b67f0d8a26aacbf5b77f8e0bc6213728c5140546040f0ee37f54"
+        );
+        assert!(k.verify(
+            b"Test Using Larger Than Block-Size Key - Hash Key First",
+            &sig
+        ));
+    }
+
+    #[test]
+    fn sha256_envelope_signatures_still_verify() {
+        // Signatures written before the HMAC path existed must keep verifying.
+        let k = SigningKey::new("k1", b"super-secret".to_vec());
+        let sig = envelope_signature("k1", b"super-secret", b"hello world");
+        assert!(k.verify(b"hello world", &sig));
+        assert!(!k.verify(b"tampered", &sig));
+    }
+
+    #[test]
+    fn sha256_envelope_algo_is_never_emitted() {
+        let k = SigningKey::new("k1", b"s".to_vec());
+        assert_ne!(k.sign(b"x").algo, ALGO_HMAC_SHA256_ENVELOPE);
+    }
+
+    #[test]
+    fn hmac_and_sha256_envelope_values_differ() {
+        let k = SigningKey::new("k1", b"super-secret".to_vec());
+        let hmac = k.sign(b"hello world");
+        let envelope = envelope_signature("k1", b"super-secret", b"hello world");
+        assert_ne!(hmac.value, envelope.value);
+        // Each value only verifies under the algo it was produced for.
+        let crossed = Signature {
+            algo: ALGO_HMAC_SHA256_ENVELOPE.into(),
+            ..hmac.clone()
+        };
+        assert!(!k.verify(b"hello world", &crossed));
+    }
+
+    #[test]
+    fn hmac_rejects_unknown_algo_and_malformed_value() {
+        let k = SigningKey::new("k1", b"s".to_vec());
+        let mut sig = k.sign(b"x");
+        sig.algo = "ed25519".into();
+        assert!(!k.verify(b"x", &sig));
+
+        let mut sig = k.sign(b"x");
+        sig.value = "not-hex".into();
+        assert!(!k.verify(b"x", &sig));
+
+        let mut sig = k.sign(b"x");
+        sig.value.truncate(32);
+        assert!(!k.verify(b"x", &sig), "short value must not verify");
     }
 
     #[test]
