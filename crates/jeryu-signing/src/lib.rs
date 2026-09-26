@@ -28,7 +28,7 @@
 #![forbid(unsafe_code)]
 
 use ed25519_dalek::{Signer, SigningKey as DalekSigningKey, Verifier, VerifyingKey};
-use hmac::{Hmac, Mac};
+use hmac::{Hmac, KeyInit, Mac};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use subtle::ConstantTimeEq;
