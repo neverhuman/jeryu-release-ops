@@ -16,7 +16,9 @@ commit, transactional durability, checkpoint, and reopen before it can emit a
 consumer receipt.
 
 `scripts/ci-local.sh` delegates to the same `ops/ci/*.sh` lanes used by the
-GitHub workflow. `scripts/ci-doctor.sh` checks the required local tools.
+GitHub workflow; its default `required` lane runs the whole `ops/ci/pr-ci.sh`
+gate, and it accepts at most one lane name. `scripts/ci-doctor.sh` checks the
+required local tools.
 
 Agent-readable exception guidance:
 

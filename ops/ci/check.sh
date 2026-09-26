@@ -45,4 +45,5 @@ for script in scripts/*.sh ops/ci/*.sh; do
 done
 bash ops/ci/test-governed-jankurai-path.sh
 bash ops/ci/test-ci-local-dispatch.sh
+bash ops/ci/test-score-report-hostiles.sh
 printf 'check ok: %s\n' "$(pwd)"
