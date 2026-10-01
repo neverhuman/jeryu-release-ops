@@ -63,7 +63,7 @@ fi
 [[ "$("${governed_source}" --version)" == 'jankurai 1.6.11' ]] ||
   fail "governed Jankurai test source has the wrong version"
 [[ "$(sha256sum "${governed_source}" | awk '{print $1}')" == \
-   '9e6b8857a26f6004d4c74e510e13b06d880f2e2ae0c89502698889ed690c5d6c' ]] ||
+   'b05c03bcb0fb2d004d3daa303ae236b8985b39e393567e8f8d274cd9f6f89103' ]] ||
   fail "governed Jankurai test source has the wrong digest"
 
 broker_bin="${tmp}/broker/bin/jankurai"
@@ -84,10 +84,10 @@ jq -n \
     schema: "jeryu.jankurai-installation/v2",
     source: {
       remote: "https://git.neverhuman.org/git/jeryu/jankurai.git",
-      commit: "b88562fdb124aa86dedd70ab972e7d0d87e58be1",
-      tag: "v1.6.11-deadlang-precision-split.3",
-      tree: "611229e54938c0e8808896e369fd54d095d258f7",
-      archive_sha256: "903a231eca8f6a1f050953b603d5a278a1606abcdf47434eb1b45262d74068aa",
+      commit: "2b8312215573eb225075ca0556f1208ae5265b8c",
+      tag: "v1.6.11-deadlang-precision-split.4",
+      tree: "bc15c67053db2d1e87e25e71276766d055130701",
+      archive_sha256: "2c8fbbd71a73c978b58bf038f30008b937a16969ec52a528f21ce2d7fa404cf6",
       cargo_lock_sha256: "b9acb981c326226a687d0b6703e4f7ee303148e9e1a6dda1aa03d77988820f6a",
       verification: "release-authoritative"
     },
@@ -107,7 +107,7 @@ jq -n \
       environment: "CARGO_NET_OFFLINE=true,HOME=/tmp,LANG=C,LC_ALL=C,SOURCE_DATE_EPOCH=0,TZ=UTC",
       rustflags: "--remap-path-prefix=/opt/jeryu/jankurai=/jankurai-build/source --remap-path-prefix=/opt/jeryu/vendor=/jankurai-build/vendor --remap-path-prefix=/opt/jeryu/target=/jankurai-build/target --remap-path-prefix=/usr/local/cargo=/jankurai-build/cargo",
       command: "cargo install --locked --offline --path /opt/jeryu/jankurai/crates/jankurai --root /opt/jeryu/out --bin jankurai",
-      context_sha256: "889d19f86fc390b0f0cf0bd6ecb4d451c51a2d6fb328e5520e4310e7ee5dedd6",
+      context_sha256: "c8303ff86f53ccbcde8b64a1b921cbb61031a2f801ab58440b044fabf76be4a2",
       cargo_net_offline: true,
       closed_vendor: true,
       network_none: true,
@@ -134,7 +134,7 @@ jq -n \
       protection_policy: "immutable-main-v1"
     },
     binary: {
-      sha256: "9e6b8857a26f6004d4c74e510e13b06d880f2e2ae0c89502698889ed690c5d6c",
+      sha256: "b05c03bcb0fb2d004d3daa303ae236b8985b39e393567e8f8d274cd9f6f89103",
       version_output: "jankurai 1.6.11"
     },
     installation: {path: $path, atomic: true},
