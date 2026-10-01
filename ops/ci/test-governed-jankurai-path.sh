@@ -53,18 +53,19 @@ done
 mkdir -p "${tmp}/broker/bin" "${tmp}/attacker/bin" \
   "${tmp}/home/.jeryu/bin" "${tmp}/home/.jeryu/receipts/jankurai/sha256" \
   "${tmp}/home/.local/bin"
-governed_source="/usr/local/libexec/jain/jankurai"
-if [[ ! -x "${governed_source}" ]]; then
-  governed_source="$(command -v jankurai 2>/dev/null || true)"
-fi
-[[ "${governed_source}" == /* && -f "${governed_source}" &&
-   ! -L "${governed_source}" && -x "${governed_source}" ]] ||
+# The fixture is this host's own verified installation. require_jankurai checks the
+# installed binary, its receipt and the host authority stamp, so the test carries no pin.
+# The child shell expands its positional inputs.
+# shellcheck disable=SC2016
+host_identity="$(env -i HOME=/home/ubuntu PATH=/usr/bin:/bin bash -c \
+  'source "$1" && require_jankurai >/dev/null && printf "%s\n%s\n" "$JERYU_GOVERNED_JANKURAI_BIN" "$JERYU_JANKURAI_RECEIPT"' \
+  bash "${source_lib}")" || fail "host governed Jankurai does not verify"
+governed_source="$(sed -n 1p <<<"${host_identity}")"
+host_receipt="$(sed -n 2p <<<"${host_identity}")"
+[[ "${governed_source}" == /* && -f "${governed_source}" && -f "${host_receipt}" ]] ||
   fail "governed Jankurai test source is unavailable"
-[[ "$("${governed_source}" --version)" == 'jankurai 1.6.11' ]] ||
-  fail "governed Jankurai test source has the wrong version"
-[[ "$(sha256sum "${governed_source}" | awk '{print $1}')" == \
-   'b05c03bcb0fb2d004d3daa303ae236b8985b39e393567e8f8d274cd9f6f89103' ]] ||
-  fail "governed Jankurai test source has the wrong digest"
+expected_version="$("${governed_source}" --version)"
+expected_sha="$(sha256sum "${governed_source}" | awk '{print $1}')"
 
 broker_bin="${tmp}/broker/bin/jankurai"
 attacker_bin="${tmp}/attacker/bin/jankurai"
@@ -74,73 +75,20 @@ cp -- "${governed_source}" "${broker_bin}"
 cp -- "${governed_source}" "${attacker_bin}"
 cp -- "${governed_source}" "${ambient_bin}"
 chmod 0555 "${broker_bin}" "${attacker_bin}" "${ambient_bin}"
-printf '#!/usr/bin/env bash\nprintf "jankurai 1.6.11\\n"\n' >"${older_local_bin}"
+printf '#!/usr/bin/env bash\nprintf "%s\\n"\n' "${expected_version}" >"${older_local_bin}"
 chmod 0755 "${older_local_bin}"
+# A release broker carries no receipt: its digest record sits beside it with
+# read-only, single-link custody.
+printf '%s\n' "${expected_sha}" >"${broker_bin}.sha256"
+chmod 0444 "${broker_bin}.sha256"
+# The host authority stamp names the digest the installer last made current.
+mkdir -p "${tmp}/home/.jeryu/authority"
+jq -n --arg sha "${expected_sha}" --arg version "${expected_version}" \
+  '{schema:"jeryu.jankurai-authority-stamp/v1",binary_sha256:$sha,version:$version}' \
+  >"${tmp}/home/.jeryu/authority/jankurai.json"
 
 receipt_stage="${tmp}/local-receipt.json"
-jq -n \
-  --arg path "${ambient_bin}" \
-  '{
-    schema: "jeryu.jankurai-installation/v2",
-    source: {
-      remote: "https://git.neverhuman.org/git/jeryu/jankurai.git",
-      commit: "2b8312215573eb225075ca0556f1208ae5265b8c",
-      tag: "v1.6.11-deadlang-precision-split.4",
-      tree: "bc15c67053db2d1e87e25e71276766d055130701",
-      archive_sha256: "2c8fbbd71a73c978b58bf038f30008b937a16969ec52a528f21ce2d7fa404cf6",
-      cargo_lock_sha256: "b9acb981c326226a687d0b6703e4f7ee303148e9e1a6dda1aa03d77988820f6a",
-      verification: "release-authoritative"
-    },
-    build: {
-      rustc: "rustc 1.95.0 (59807616e 2026-04-14)",
-      cargo: "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
-      target_triple: "x86_64-unknown-linux-gnu",
-      mode: "oci-vendor-locked-offline-workspace-member-v2",
-      package_path: "crates/jankurai",
-      builder_image: "rust@sha256:d7482085ff5b415f84dba5647ae71606650bdef00db7aeb69f4b3d170c3e4082",
-      builder_image_id: "sha256:d7482085ff5b415f84dba5647ae71606650bdef00db7aeb69f4b3d170c3e4082",
-      linker: "GNU ld (GNU Binutils for Debian) 2.40",
-      glibc: "ldd (Debian GLIBC 2.36-9+deb12u14) 2.36",
-      vendor_files_sha256: "a7e332f4495d9748ea020ae8ee37c4240f0f035059799bd3dc74497437143d99",
-      vendor_file_count: "14889",
-      cargo_config_sha256: "b8982c761d62e447f2d1653c199d2d58e6b2de6c5a6f8ddba3d38e47b7f863d6",
-      environment: "CARGO_NET_OFFLINE=true,HOME=/tmp,LANG=C,LC_ALL=C,SOURCE_DATE_EPOCH=0,TZ=UTC",
-      rustflags: "--remap-path-prefix=/opt/jeryu/jankurai=/jankurai-build/source --remap-path-prefix=/opt/jeryu/vendor=/jankurai-build/vendor --remap-path-prefix=/opt/jeryu/target=/jankurai-build/target --remap-path-prefix=/usr/local/cargo=/jankurai-build/cargo",
-      command: "cargo install --locked --offline --path /opt/jeryu/jankurai/crates/jankurai --root /opt/jeryu/out --bin jankurai",
-      context_sha256: "c8303ff86f53ccbcde8b64a1b921cbb61031a2f801ab58440b044fabf76be4a2",
-      cargo_net_offline: true,
-      closed_vendor: true,
-      network_none: true,
-      read_only_root: true,
-      non_root: true,
-      capabilities_dropped: true,
-      no_new_privileges: true,
-      container_engine_path: "/usr/bin/docker",
-      git_global_config_disabled: true,
-      git_system_config_disabled: true,
-      git_http_follow_redirects: false,
-      git_terminal_prompt: false,
-      jankurai_update_check: false,
-      network_scope: "local-forge-source-plus-closed-vendor-network-none",
-      no_proxy: "127.0.0.1,localhost,::1"
-    },
-    governance: {
-      status: "governed",
-      manifest_repo: "https://git.neverhuman.org/git/jeryu/jeryu-tool.git",
-      manifest_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      manifest_tree: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-      manifest_sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-      protected_main: true,
-      protection_policy: "immutable-main-v1"
-    },
-    binary: {
-      sha256: "b05c03bcb0fb2d004d3daa303ae236b8985b39e393567e8f8d274cd9f6f89103",
-      version_output: "jankurai 1.6.11"
-    },
-    installation: {path: $path, atomic: true},
-    test_mode: false,
-    conclusion: "success"
-  }' >"${receipt_stage}"
+jq --arg path "${ambient_bin}" '.installation.path = $path' "${host_receipt}" >"${receipt_stage}"
 receipt_sha="$(sha256sum "${receipt_stage}")"
 receipt_sha="${receipt_sha%% *}"
 local_receipt="${tmp}/home/.jeryu/receipts/jankurai/sha256/${receipt_sha}.json"
@@ -218,9 +166,9 @@ expect_failure "missing broker auditor" "release broker Jankurai path mismatch" 
 
 cp -- "${broker_bin}" "${tmp}/governed-backup"
 chmod 0755 "${broker_bin}"
-printf '#!/usr/bin/env bash\nprintf "jankurai 1.6.11\\n"\n' >"${broker_bin}"
+printf '#!/usr/bin/env bash\nprintf "%s\\n"\n' "${expected_version}" >"${broker_bin}"
 chmod 0555 "${broker_bin}"
-expect_failure "wrong broker binary" "governed jankurai identity mismatch" \
+expect_failure "wrong broker binary" "the host has not installed the current pin" \
   run_release_broker "${tmp}/broker/bin"
 chmod 0755 "${broker_bin}"
 rm -f -- "${broker_bin}"
@@ -237,4 +185,19 @@ expect_failure "linked broker binary" "release broker Jankurai custody mismatch"
   run_release_broker "${tmp}/broker/bin"
 rm -f -- "${tmp}/broker/bin/jankurai-linked"
 
-printf 'governed Jankurai path tests passed: broker ambient env path receipt missing identity custody\n'
+# Freshness: the ordinary home installation must be the one the host authority names,
+# and a release broker must carry its read-only digest record.
+stamp="${tmp}/home/.jeryu/authority/jankurai.json"
+cp -- "${stamp}" "${tmp}/stamp-backup"
+jq --arg sha "$(printf 'f%.0s' {1..64})" '.binary_sha256 = $sha' "${tmp}/stamp-backup" >"${stamp}"
+# shellcheck disable=SC2016
+expect_failure "stale host authority" "the host has not installed the current pin" \
+  env -i HOME="${tmp}/home" PATH="/usr/bin:/bin" \
+  bash -c 'source "$1"; require_jankurai' bash "${test_local_lib}"
+mv -- "${tmp}/stamp-backup" "${stamp}"
+chmod 0644 "${broker_bin}.sha256"
+expect_failure "writable broker digest record" "release broker Jankurai digest record custody mismatch" \
+  run_release_broker "${tmp}/broker/bin"
+chmod 0444 "${broker_bin}.sha256"
+
+printf 'governed Jankurai path tests passed: broker ambient env path receipt missing identity custody freshness\n'
