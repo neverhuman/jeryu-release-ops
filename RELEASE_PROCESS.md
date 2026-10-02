@@ -23,4 +23,4 @@ test log, and checksum sidecar together.
 
 Evidence is never accepted from a review branch, a floating ref, a historical
 TOML assertion, a waived consumer, or a manually declared check. This repository
-does not push images, move tags, change routes, or mutate Jain production.
+does not push images, move tags, change routes, or mutate any downstream production.

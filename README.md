@@ -6,8 +6,8 @@ Release, signing, governance, observability, and compliance tooling.
 
 This repository is also the single authority for the independently released
 Jeryu family. [`repos.manifest.toml`](repos.manifest.toml) binds the exact
-`/home/ubuntu/jain-split/jeryu-split` root, `jeryu/*` forge identities, v5 tag
-lineage, and the canonical sibling `jain-redline` dependency. Container and
+split root (`split_root`), `jeryu/*` forge identities, v5 tag
+lineage, and the canonical sibling Redline dependency. Container and
 portal manifests are projections of this authority, not competing sources.
 
 The active authority profile is the private hosted Jeryu forge at

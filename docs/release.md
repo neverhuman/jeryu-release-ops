@@ -43,7 +43,7 @@ ops/ci/redline-consumer.sh \
   --family-ci /path/to/redline-family-ci.json \
   --redline-manifest /path/to/redline/repos.manifest.toml \
   --redline-policy /path/to/redline/agent/audit-policy.toml \
-  --consumer-manifest /home/ubuntu/jain-split/jeryu-split/jeryu-release-ops/repos.manifest.toml \
+  --consumer-manifest /path/to/jeryu-split/jeryu-release-ops/repos.manifest.toml \
   --output /path/to/jeryu-consumer.json
 ```
 
