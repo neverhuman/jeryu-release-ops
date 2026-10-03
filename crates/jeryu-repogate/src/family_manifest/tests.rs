@@ -295,3 +295,58 @@ fn compliance_state_is_one_way() {
     validate_family_manifest_transition(&enforced, &enforced).unwrap();
     assert!(validate_family_manifest_transition(&enforced, RAW).is_err());
 }
+
+#[test]
+fn family_membership_is_pinned_to_an_exact_member_set() {
+    let manifest = canonical();
+    assert_eq!(
+        manifest.required_repos,
+        [
+            "jeryu",
+            "jeryu-cache",
+            "jeryu-ci-runner",
+            "jeryu-core",
+            "jeryu-deploy",
+            "jeryu-intelligence",
+            "jeryu-jira",
+            "jeryu-release-ops",
+            "jeryu-tool",
+            "jeryu-tool-finder",
+            "jeryu-web",
+        ]
+    );
+    assert_eq!(
+        manifest
+            .repo
+            .iter()
+            .map(|repo| repo.name.as_str())
+            .collect::<Vec<_>>(),
+        [
+            "jeryu",
+            "jeryu-cache",
+            "jeryu-ci-runner",
+            "jeryu-core",
+            "jeryu-deploy",
+            "jeryu-intelligence",
+            "jeryu-jira",
+            "jeryu-tool",
+            "jeryu-tool-finder",
+            "jeryu-web",
+        ]
+    );
+    // The control plane is a member of the family and the only member without a
+    // product row, so the family is exactly the product rows plus itself.
+    assert!(
+        manifest
+            .required_repos
+            .contains(&manifest.control_plane.name)
+    );
+    assert_eq!(manifest.required_repos.len(), manifest.repo.len() + 1);
+    // Redline resolves through [nested_families.redline]; it is never a member.
+    assert!(
+        !manifest
+            .required_repos
+            .iter()
+            .any(|repo| repo == "jeryu-redline")
+    );
+}

@@ -10,6 +10,16 @@ split root (`split_root`), `jeryu/*` forge identities, v5 tag
 lineage, and the canonical sibling Redline dependency. Container and
 portal manifests are projections of this authority, not competing sources.
 
+That file is the only authority for family membership. Consumers read
+`repos.manifest.toml` directly; no copy of it is kept anywhere else, and a
+projection is regenerated from it rather than edited. Its member set — the ten
+`[[repo]]` rows plus the control plane, which lists itself in `required_repos` —
+is pinned by a member-count test in
+`crates/jeryu-repogate/src/family_manifest/tests.rs`, so adding or dropping a
+repository is a deliberate change to that test as well as to the manifest.
+Redline is not a member: it resolves through the sibling canonical container
+named in `[nested_families.redline]`.
+
 The active authority profile is the private hosted Jeryu forge at
 `https://git.neverhuman.org`; every control-plane and product `remote` in the
 manifest uses that host. The loopback profile is retained only to describe the

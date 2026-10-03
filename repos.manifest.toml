@@ -1,3 +1,15 @@
+# Jeryu family repository authority.
+#
+# This file is the only authority for the membership and release identity of the
+# Jeryu split family. Consumers read this file directly; no copy of it is kept
+# anywhere else, and any other inventory is a projection that must be regenerated
+# from here rather than edited. Its member set is pinned by the member-count test
+# in crates/jeryu-repogate/src/family_manifest/tests.rs, so adding or dropping a
+# repository is a deliberate change to that test as well as to this file.
+#
+# The control plane lists itself under required_repos and [control_plane]; it has
+# no [[repo]] row. Redline is not a member: it resolves through the sibling
+# canonical container named in [nested_families.redline].
 schema_version = "1"
 repo_family = "jeryu-split"
 release_identity = "jeryu-split"
