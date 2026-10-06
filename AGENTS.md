@@ -25,4 +25,8 @@ for split-family development.
 The Redline database dependency is separately pinned to an immutable
 `redline-core-v4.1.0-jain.N` tag. A revision change must update the locked
 source, consumer producer, and release documentation together, then pass the
-consumer and full PR proof lanes described in `ops/AGENTS.md`.
+consumer and full PR proof lanes described in `ops/AGENTS.md`. It stays a
+development-only dependency of `jeryu-obs`: `jeryu-deploy` builds
+`jeryu-repogate`, `jeryu-bench` and `jeryu-obs` from a release tag against a
+five-repository hosted pin policy, and a non-development Redline edge would be
+a sixth. `crates/jeryu-obs/tests/redline_consumer_scope.rs` holds that line.
