@@ -81,9 +81,21 @@ fn fixture_tree_reports_only_the_planted_markers() {
     let root = dir.path();
 
     // Clean product source and docs.
-    plant(root, "README.md", b"# workspace\n\na hosted forge, nothing more\n");
-    plant(root, "src/main.rs", b"fn main() {\n    println!(\"ok\");\n}\n");
-    plant(root, "docs/guide/intro.md", b"an introduction\nwith two lines\n");
+    plant(
+        root,
+        "README.md",
+        b"# workspace\n\na hosted forge, nothing more\n",
+    );
+    plant(
+        root,
+        "src/main.rs",
+        b"fn main() {\n    println!(\"ok\");\n}\n",
+    );
+    plant(
+        root,
+        "docs/guide/intro.md",
+        b"an introduction\nwith two lines\n",
+    );
 
     // Near-misses: close enough to read like brand names, but not markers.
     let mut near = b"names we are allowed to use:\n".to_vec();
@@ -106,10 +118,26 @@ fn fixture_tree_reports_only_the_planted_markers() {
     plant(root, "docs/guide/deep/vendors.md", &nested);
 
     // Skipped subtrees and generated files: planted but never reported.
-    plant(root, "target/debug/build.log", &line_with(&marker(MARKER_HEX[0])));
-    plant(root, "web/node_modules/pkg/readme.md", &line_with(&marker(MARKER_HEX[0])));
-    plant(root, "web/dist/bundle.js", &line_with(&marker(MARKER_HEX[0])));
-    plant(root, "web/app.tsbuildinfo", &line_with(&marker(MARKER_HEX[0])));
+    plant(
+        root,
+        "target/debug/build.log",
+        &line_with(&marker(MARKER_HEX[0])),
+    );
+    plant(
+        root,
+        "web/node_modules/pkg/readme.md",
+        &line_with(&marker(MARKER_HEX[0])),
+    );
+    plant(
+        root,
+        "web/dist/bundle.js",
+        &line_with(&marker(MARKER_HEX[0])),
+    );
+    plant(
+        root,
+        "web/app.tsbuildinfo",
+        &line_with(&marker(MARKER_HEX[0])),
+    );
     plant(root, "AGENT_CHAT.md", &line_with(&marker(MARKER_HEX[0])));
 
     let findings = scan(root).expect("scan ok");
@@ -172,7 +200,11 @@ fn exempt_file_name_applies_only_at_the_scan_root() {
     let root = dir.path();
 
     plant(root, "AGENT_CHAT.md", &line_with(&marker(MARKER_HEX[0])));
-    plant(root, "agent/AGENT_CHAT.md", &line_with(&marker(MARKER_HEX[0])));
+    plant(
+        root,
+        "agent/AGENT_CHAT.md",
+        &line_with(&marker(MARKER_HEX[0])),
+    );
 
     let findings = scan(root).expect("scan ok");
     assert_eq!(
