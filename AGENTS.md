@@ -29,4 +29,5 @@ consumer and full PR proof lanes described in `ops/AGENTS.md`. It stays a
 development-only dependency of `jeryu-obs`: `jeryu-deploy` builds
 `jeryu-repogate`, `jeryu-bench` and `jeryu-obs` from a release tag against a
 five-repository hosted pin policy, and a non-development Redline edge would be
-a sixth. `crates/jeryu-obs/tests/redline_consumer_scope.rs` holds that line.
+a sixth. `crates/jeryu-obs/tests/redline_consumer_scope.rs` holds that line
+for every workspace member and runs in `just redline-consumer-test`.
