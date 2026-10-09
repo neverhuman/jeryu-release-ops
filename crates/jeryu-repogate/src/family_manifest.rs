@@ -19,7 +19,12 @@ pub const FAMILY_MANIFEST_RELATIVE_PATH: &str = "repos.manifest.toml";
 const SPLIT_ROOT: &str = "/home/ubuntu/jain-split/jeryu-split";
 const AUTHORITY_PATH: &str =
     "/home/ubuntu/jain-split/jeryu-split/jeryu-release-ops/repos.manifest.toml";
-const REDLINE_ROOT: &str = "/home/ubuntu/jain-split/jain-redline";
+/// Redline's one canonical container: this directory name as a sibling of
+/// `SPLIT_ROOT`. A duplicate container under another name (`jeryu-redline`)
+/// and nesting in either direction are refused.
+const REDLINE_CONTAINER: &str = "jain-redline";
+/// Redline's control plane, relative to its container.
+const REDLINE_CONTROL_PLANE: &str = "redline-split-ops";
 const LOCAL_FORGE_BASE_URL: &str = "http://127.0.0.1:8787";
 const LOCAL_FORGE_GIT_TEMPLATE: &str = "http://127.0.0.1:8787/git/{owner}/{repo}.git";
 const HOSTED_FORGE_BASE_URL: &str = "https://git.neverhuman.org";
@@ -252,18 +257,28 @@ fn validate(manifest: &Manifest) -> Result<()> {
     }
 
     let redline = &manifest.nested_families.redline;
+    let redline_root = redline_root();
+    let control_plane = redline_root.join(REDLINE_CONTROL_PLANE);
     if redline.family != "redline-split"
         || redline.consumer != "jeryu-split"
-        || redline.source_authority != "jain-redline"
-        || redline.container_path != REDLINE_ROOT
-        || redline.control_plane != format!("{REDLINE_ROOT}/redline-split-ops")
-        || redline.manifest_path != format!("{REDLINE_ROOT}/redline-split-ops/repos.manifest.toml")
+        || redline.source_authority != REDLINE_CONTAINER
+        || Path::new(&redline.container_path) != redline_root
+        || Path::new(&redline.control_plane) != control_plane
+        || Path::new(&redline.manifest_path) != control_plane.join(FAMILY_MANIFEST_RELATIVE_PATH)
         || redline.dependency_resolution != HOSTED_DEPENDENCY_RESOLUTION
         || !redline.required
     {
         bail!("Redline dependency must resolve only through canonical jain-redline authority");
     }
     Ok(())
+}
+
+/// The canonical Redline container: `SPLIT_ROOT`'s sibling `jain-redline`.
+fn redline_root() -> PathBuf {
+    Path::new(SPLIT_ROOT)
+        .parent()
+        .expect("the split root has a parent directory")
+        .join(REDLINE_CONTAINER)
 }
 
 fn validate_forges(forges: &Forges) -> Result<()> {
