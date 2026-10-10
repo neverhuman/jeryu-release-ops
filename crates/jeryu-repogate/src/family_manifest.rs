@@ -5,7 +5,7 @@ mod identity;
 
 use std::collections::BTreeSet;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use anyhow::{Context, Result, bail};
 use serde::Deserialize;
@@ -16,15 +16,11 @@ use identity::{CONTROL_PLANE_PREDECESSOR_TAG, PRODUCT_AUTHORITIES};
 
 /// Canonical authority-manifest path relative to the release control plane.
 pub const FAMILY_MANIFEST_RELATIVE_PATH: &str = "repos.manifest.toml";
-const SPLIT_ROOT: &str = "/home/ubuntu/jain-split/jeryu-split";
-const AUTHORITY_PATH: &str =
-    "/home/ubuntu/jain-split/jeryu-split/jeryu-release-ops/repos.manifest.toml";
 /// Redline's one canonical container: this directory name as a sibling of
 /// `SPLIT_ROOT`. A duplicate container under another name (`jeryu-redline`)
 /// and nesting in either direction are refused.
 const REDLINE_CONTAINER: &str = "jain-redline";
 /// Redline's control plane, relative to its container.
-const REDLINE_CONTROL_PLANE: &str = "redline-split-ops";
 const LOCAL_FORGE_BASE_URL: &str = "http://127.0.0.1:8787";
 const LOCAL_FORGE_GIT_TEMPLATE: &str = "http://127.0.0.1:8787/git/{owner}/{repo}.git";
 const HOSTED_FORGE_BASE_URL: &str = "https://git.neverhuman.org";
@@ -40,8 +36,6 @@ struct Manifest {
     release_lineage: String,
     status: String,
     formal_ga: bool,
-    split_root: String,
-    manifest_authority: String,
     compliance_state: ComplianceState,
     forges: Forges,
     compliance: ComplianceContract,
@@ -167,9 +161,6 @@ fn validate(manifest: &Manifest) -> Result<()> {
     if manifest.status != "candidate" || manifest.formal_ga {
         bail!("Jeryu family authority must remain fail-closed candidate metadata");
     }
-    if manifest.split_root != SPLIT_ROOT || manifest.manifest_authority != AUTHORITY_PATH {
-        bail!("Jeryu split root or authority path is not canonical");
-    }
     validate_forges(&manifest.forges)?;
     let authority_forge =
         selected_authority_forge(&manifest.forges, &manifest.control_plane.authority_forge)?;
@@ -195,8 +186,10 @@ fn validate(manifest: &Manifest) -> Result<()> {
         {
             bail!("{} has the wrong runtime or product identity", repo.name);
         }
+        validate_member_path(&repo.path, &repo.name)?;
         validate_repository(repo, expected.tag, expected.lfs_required, authority_forge)?;
     }
+    validate_member_path(&manifest.control_plane.path, &manifest.control_plane.name)?;
     validate_control_plane(&manifest.control_plane, authority_forge)?;
     for repo in &manifest.repo {
         if !names.insert(repo.name.clone())
@@ -257,28 +250,19 @@ fn validate(manifest: &Manifest) -> Result<()> {
     }
 
     let redline = &manifest.nested_families.redline;
-    let redline_root = redline_root();
-    let control_plane = redline_root.join(REDLINE_CONTROL_PLANE);
     if redline.family != "redline-split"
         || redline.consumer != "jeryu-split"
         || redline.source_authority != REDLINE_CONTAINER
-        || Path::new(&redline.container_path) != redline_root
-        || Path::new(&redline.control_plane) != control_plane
-        || Path::new(&redline.manifest_path) != control_plane.join(FAMILY_MANIFEST_RELATIVE_PATH)
+        || Path::new(&redline.container_path) != Path::new("../jain-redline")
+        || Path::new(&redline.control_plane) != Path::new("../jain-redline/redline-split-ops")
+        || Path::new(&redline.manifest_path)
+            != Path::new("../jain-redline/redline-split-ops/repos.manifest.toml")
         || redline.dependency_resolution != HOSTED_DEPENDENCY_RESOLUTION
         || !redline.required
     {
         bail!("Redline dependency must resolve only through canonical jain-redline authority");
     }
     Ok(())
-}
-
-/// The canonical Redline container: `SPLIT_ROOT`'s sibling `jain-redline`.
-fn redline_root() -> PathBuf {
-    Path::new(SPLIT_ROOT)
-        .parent()
-        .expect("the split root has a parent directory")
-        .join(REDLINE_CONTAINER)
 }
 
 fn validate_forges(forges: &Forges) -> Result<()> {
@@ -327,14 +311,14 @@ fn validate_repository(
     expected_lfs: bool,
     authority_forge: &ForgeProfile,
 ) -> Result<()> {
-    let expected_path = PathBuf::from(SPLIT_ROOT).join(&repo.name);
+    let expected_path = repo.name.clone();
     let expected_slug = format!("jeryu/{}", repo.name);
     let expected_remote = authority_forge
         .git_url_template
         .replace("{owner}", "jeryu")
         .replace("{repo}", &repo.name);
     let expected_check = format!("{}/required", repo.name);
-    if repo.path != expected_path.to_string_lossy()
+    if repo.path != expected_path
         || repo.jeryu_slug != expected_slug
         || repo.remote != expected_remote
         || repo.required_check != expected_check
@@ -366,7 +350,7 @@ fn validate_repository(
 }
 
 fn validate_control_plane(control: &ControlPlane, authority_forge: &ForgeProfile) -> Result<()> {
-    let expected_path = PathBuf::from(SPLIT_ROOT).join(&control.name);
+    let expected_path = control.name.clone();
     let expected_slug = format!("jeryu/{}", control.name);
     let expected_remote = authority_forge
         .git_url_template
@@ -375,7 +359,7 @@ fn validate_control_plane(control: &ControlPlane, authority_forge: &ForgeProfile
     let expected_check = format!("{}/required", control.name);
     if control.name != "jeryu-release-ops"
         || control.authority_forge != "hosted"
-        || control.path != expected_path.to_string_lossy()
+        || control.path != expected_path
         || control.jeryu_slug != expected_slug
         || control.remote != expected_remote
         || control.required_check != expected_check
@@ -414,3 +398,14 @@ fn validate_tag_lineage(name: &str, tag: &str) -> Result<()> {
 
 #[cfg(test)]
 mod tests;
+
+fn validate_member_path(path: &str, name: &str) -> Result<()> {
+    let path = Path::new(path);
+    if path.is_absolute()
+        || path.components().count() != 1
+        || path.file_name().and_then(|v| v.to_str()) != Some(name)
+    {
+        bail!("{name} path must be its single relative member directory");
+    }
+    Ok(())
+}

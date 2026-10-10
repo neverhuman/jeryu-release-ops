@@ -107,44 +107,18 @@ fn updated_release_identities_are_exact() {
 }
 
 #[test]
-fn rejects_old_root_duplicate_redline_and_slug_alias() {
-    for hostile in [
-        RAW.replace(SPLIT_ROOT, "/home/ubuntu/jeryu-split"),
-        RAW.replace(
-            &redline_root().to_string_lossy().into_owned(),
-            "/home/ubuntu/jain-split/jeryu-split/jeryu-redline",
-        ),
-        RAW.replacen("jeryu/jeryu-cache", "veox/jeryu-cache", 1),
-    ] {
-        let manifest: Manifest = toml::from_str(&hostile).unwrap();
-        assert!(validate(&manifest).is_err());
-    }
-}
+fn rejects_absolute_member_paths_and_non_sibling_redline() {
+    let mut absolute = canonical();
+    absolute.repo[0].path = "/opt/jeryu/jeryu".to_owned();
+    assert!(validate(&absolute).is_err());
 
-#[test]
-fn redline_resolves_only_through_the_canonical_sibling_container() {
-    let pinned = redline_root();
-    assert_eq!(pinned.parent(), Path::new(SPLIT_ROOT).parent());
-    let siblings = pinned.parent().unwrap();
-    // Each hostile container is made fully self-consistent: the container,
-    // its control plane and its manifest all move together.
-    for container in [
-        siblings.join("jeryu-redline"),
-        Path::new(SPLIT_ROOT).join(REDLINE_CONTAINER),
-        siblings.to_owned(),
-    ] {
-        let mut manifest = canonical();
-        let redline = &mut manifest.nested_families.redline;
-        let control_plane = container.join(REDLINE_CONTROL_PLANE);
-        redline.container_path = container.to_string_lossy().into_owned();
-        redline.control_plane = control_plane.to_string_lossy().into_owned();
-        redline.manifest_path = control_plane
-            .join(FAMILY_MANIFEST_RELATIVE_PATH)
-            .to_string_lossy()
-            .into_owned();
-        assert!(validate(&manifest).is_err(), "{}", container.display());
-    }
-    validate(&canonical()).unwrap();
+    let mut nested = canonical();
+    nested.nested_families.redline.container_path = "jain-redline".to_owned();
+    assert!(validate(&nested).is_err());
+
+    let mut alias = canonical();
+    alias.repo[0].jeryu_slug = "veox/jeryu".to_owned();
+    assert!(validate(&alias).is_err());
 }
 
 #[test]
@@ -166,7 +140,7 @@ fn rejects_unknown_fields_and_self_consistent_identity_substitution() {
     let mut substituted = canonical();
     let repo = &mut substituted.repo[0];
     repo.name = "jeryu-unknown".to_owned();
-    repo.path = format!("{SPLIT_ROOT}/jeryu-unknown");
+    repo.path = "jeryu-unknown".to_owned();
     repo.jeryu_slug = "jeryu/jeryu-unknown".to_owned();
     repo.remote = "https://git.neverhuman.org/git/jeryu/jeryu-unknown.git".to_owned();
     repo.required_check = "jeryu-unknown/required".to_owned();
