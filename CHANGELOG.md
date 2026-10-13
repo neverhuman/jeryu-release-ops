@@ -1,5 +1,7 @@
 # Changelog
 
+This file is written when a release is cut: its notes are generated from the commits since the previous release. Do not add entries by hand; write a commit subject that says what changed.
+
 ## jeryu-release-ops-v5.0.0-split.7 - 2026-09-02
 - Make the hosted Jeryu forge authoritative for every family repository while
   retaining the local-transition profile only as a non-authoritative transport

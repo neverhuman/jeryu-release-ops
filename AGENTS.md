@@ -31,3 +31,5 @@ development-only dependency of `jeryu-obs`: `jeryu-deploy` builds
 five-repository hosted pin policy, and a non-development Redline edge would be
 a sixth. `crates/jeryu-obs/tests/redline_consumer_scope.rs` holds that line
 for every workspace member and runs in `just redline-consumer-test`.
+
+Do not edit CHANGELOG.md in a change: release notes are generated at release time from commit subjects and Todo: trailers.

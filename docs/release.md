@@ -3,8 +3,8 @@
 This split member publishes source changes through pinned tags; `jeryu-deploy` remains the binary release authority.
 
 Version source is `VERSION` plus the split tag recorded in
-`repos.manifest.toml` when present. Release notes are recorded in
-`CHANGELOG.md`.
+`repos.manifest.toml` when present. The release generates its notes from the commits since the
+last release.
 
 The authoritative repository and tag transport is `git.neverhuman.org` for
 every active Jeryu split member. Loopback remains only a declared transition
