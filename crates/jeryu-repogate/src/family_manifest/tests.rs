@@ -65,6 +65,20 @@ fn hosted_authority_selector_and_profiles_are_explicit_and_fail_closed() {
         "http://127.0.0.1:8787/git/jeryu/jeryu-release-ops.git".to_owned();
     assert!(validate(&loopback_control).is_err());
 
+    // The forge answers to a second public name (`git.jeryu.ai`). Recorded
+    // remotes are the allowlisted clone sources, so rewriting one row to the
+    // other name — without the hosted profile — is refused, not accepted as a
+    // synonym.
+    let mut alternate_public_name = canonical();
+    alternate_public_name.repo[0].remote =
+        "https://git.jeryu.ai/git/jeryu/jeryu.git".to_owned();
+    assert!(validate(&alternate_public_name).is_err());
+
+    let mut alternate_public_control = canonical();
+    alternate_public_control.control_plane.remote =
+        "https://git.jeryu.ai/git/jeryu/jeryu-release-ops.git".to_owned();
+    assert!(validate(&alternate_public_control).is_err());
+
     let mut loopback_redline_transport = canonical();
     loopback_redline_transport
         .nested_families

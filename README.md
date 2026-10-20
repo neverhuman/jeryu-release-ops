@@ -28,6 +28,23 @@ Git source spellings remain unchanged to preserve crate identity, while the
 host's longest-match Git rewrites and CLI transport route those fetches to the
 hosted forge.
 
+The same forge also answers to its newer public name `git.jeryu.ai`, which the
+portal's clone entrypoint (`jeryu/scripts/clone-family.sh`) now uses as its
+default bootstrap host. The recorded `remote` of every manifest row stays on
+`git.neverhuman.org` in this move: the rows are the allowlisted clone sources,
+and validation refuses a row written with any other host, so renaming them
+piecemeal fails closed. A site whose `JERYU_GIT_REMOTE_ALLOWLIST` names only
+one of the two public hosts therefore refuses the other; during the transition
+allow both entries:
+
+```
+JERYU_GIT_REMOTE_ALLOWLIST='git.jeryu.ai/git git.neverhuman.org/git'
+```
+
+A site that allows only `git.neverhuman.org/git` keeps working by naming that
+host explicitly as `JERYU_FORGE_BASE`. No allowlist entry is added for a site
+automatically.
+
 Live read-only hosted-forge verification on 2026-09-02 resolved protected `main` and
 the immutable `jeryu-release-ops-v5.0.0-split.6` tag to the same commit,
 `0772dca04bbdfbcaac8ee10fafd8789d01fd1cab`. A control-plane source successor
