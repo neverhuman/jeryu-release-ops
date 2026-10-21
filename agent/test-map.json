@@ -40,6 +40,11 @@
       "lane": "score",
       "purpose": "verify release notes stay routed through the score lane"
     },
+    "CONTRIBUTING.md": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify the contributor guidance matches the lanes this repository runs"
+    },
     "Cargo.lock": {
       "command": "just check",
       "lane": "check",
@@ -74,6 +79,11 @@
       "command": "just release-readiness",
       "lane": "release",
       "purpose": "verify rollback preserves immutable refs and fail-closed proof state"
+    },
+    "SECURITY.md": {
+      "command": "just check",
+      "lane": "check",
+      "purpose": "verify the private vulnerability reporting guidance stays current"
     },
     "VERSION": {
       "command": "just score",
