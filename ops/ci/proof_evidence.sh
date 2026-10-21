@@ -90,24 +90,6 @@ validate_baseline
 rm -rf target/jankurai
 mkdir -p target/jankurai/security target/jankurai/proofbind target/jankurai/proofmark target/jankurai/rust
 
-# The protected-main audit is the ratchet baseline; copy the validated bytes.
-cp "${BASELINE_REPORT}" target/jankurai/accepted-baseline.json
-jankurai audit . --mode ratchet --baseline target/jankurai/accepted-baseline.json \
-  --json target/jankurai/repo-score.json --md target/jankurai/repo-score.md \
-  --policy agent/audit-policy.toml \
-  --repair-queue-jsonl target/jankurai/repair-queue.jsonl \
-  --full --no-score-history
-baseline_fingerprint="$(jq -r '.report_fingerprint' "${BASELINE_REPORT}")"
-jq -e --arg fp "${baseline_fingerprint}" \
-  '.score >= 85 and (.caps_applied | length) == 0 and
-   .decision.passed == true and .decision.hard_findings == 0 and
-   .decision.ratchet.passed == true and
-   .decision.ratchet.baseline_report_fingerprint == $fp and
-   (.decision.ratchet.new_caps | length) == 0 and
-   (.decision.ratchet.new_hard_findings | length) == 0 and
-   .decision.ratchet.policy_changed == false' \
-  target/jankurai/repo-score.json >/dev/null
-
 jankurai security run . --out target/jankurai/security/evidence.json \
   --script tools/security-lane.sh --strict --profile ci
 jq -e --arg head "$(git rev-parse HEAD)" \
@@ -142,6 +124,21 @@ jankurai proofmark rust . --obligations target/jankurai/proofbind/obligations.js
 jankurai copy-code . --json target/jankurai/copy-code.json --md target/jankurai/copy-code.md
 jankurai rust map . --out-dir target/jankurai/rust
 jankurai rust witness build . --out target/jankurai/rust/witness-graph.json
+
+# Ratchet last, so the audit sees the evidence the tools above produced. The
+# protected-main audit is the baseline; copy the validated bytes.
+cp "${BASELINE_REPORT}" target/jankurai/accepted-baseline.json
+jankurai audit . --mode ratchet --baseline target/jankurai/accepted-baseline.json --json target/jankurai/repo-score.json --md target/jankurai/repo-score.md --policy agent/audit-policy.toml --repair-queue-jsonl target/jankurai/repair-queue.jsonl --full --no-score-history
+baseline_fingerprint="$(jq -r '.report_fingerprint' "${BASELINE_REPORT}")"
+jq -e --arg fp "${baseline_fingerprint}" \
+  '.score >= 85 and (.caps_applied | length) == 0 and
+   .decision.passed == true and .decision.hard_findings == 0 and
+   .decision.ratchet.passed == true and
+   .decision.ratchet.baseline_report_fingerprint == $fp and
+   (.decision.ratchet.new_caps | length) == 0 and
+   (.decision.ratchet.new_hard_findings | length) == 0 and
+   .decision.ratchet.policy_changed == false' \
+  target/jankurai/repo-score.json >/dev/null
 
 printf 'proof evidence ok: head=%s score=%s baseline=%s\n' \
   "$(git rev-parse HEAD)" "$(jq -r '.score' target/jankurai/repo-score.json)" \
