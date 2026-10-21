@@ -29,4 +29,9 @@ git init -q "$fixture/foreign"
 export GIT_DIR="$fixture/foreign/.git" GIT_WORK_TREE="$fixture/foreign"
 run_guard "$fixture/local/target/build-cache"
 refuse "$fixture/foreign/target/build-cache"
+# A checkout that tracks files under target/ is refused, with Git overrides pointing elsewhere.
+printf 'x\n' > "$fixture/local/target/tracked"
+env -u GIT_DIR -u GIT_WORK_TREE git -C "$fixture/local" add -f target/tracked
+refuse "$fixture/local/target/build-cache"
+grep -q 'target/ contains tracked files' "$fixture/output"
 printf 'build cache guard tests passed\n'

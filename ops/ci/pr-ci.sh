@@ -60,6 +60,16 @@ if [ -n "${JERYU_CI_BUILD_CACHE_DIR:-}" ]; then
   # gate runner gives), never a symlink or a path elsewhere; and never reuse incremental state.
   cache_dir="$JERYU_CI_BUILD_CACHE_DIR"
   cache_top="$repo_root"
+  # A source archive has no index. In a checkout, inspect this repository's index,
+  # even when the caller supplied Git directory, worktree or index overrides.
+  if [ -e "$cache_top/.git" ]; then
+    tracked_target="$(env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_COMMON_DIR \
+      git --git-dir="$cache_top/.git" --work-tree="$cache_top" ls-files -- target)" || exit 1
+    if [ -n "$tracked_target" ]; then
+      echo "refusing build cache: target/ contains tracked files" >&2
+      exit 1
+    fi
+  fi
   if [[ -L "$cache_top/target" || -L "$cache_dir" || ! -d "$cache_dir" || ! -O "$cache_dir" \
         || "$(cd "$cache_dir" && pwd -P)" != "$(cd "$cache_top" && pwd -P)/target/build-cache" ]]; then
     echo "refusing JERYU_CI_BUILD_CACHE_DIR=$cache_dir: only this checkout's physical target/build-cache is accepted" >&2
