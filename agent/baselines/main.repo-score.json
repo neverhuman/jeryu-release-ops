@@ -1,20 +1,20 @@
 {
-  "report_fingerprint": "sha256:6e48012f9e9bdce8b0ef97ee5c71ba01fddd0f8049eafa232658b0d700f98e81",
-  "input_fingerprint": "sha256:55d1bd02f118a9a7c62a1ee2b4bb5d2f70848b72cc792c4e52fb603a7dc057e2",
-  "policy_fingerprint": "sha256:9da4b18bb9f9117b2422fe4cbc9c2050a15fe4d1034553b68fbda8347885f843",
+  "report_fingerprint": "sha256:8293963559b786684c3f5b2d601c398156093d6c8b97589f8d683ff484631273",
+  "input_fingerprint": "sha256:cefe783641d9e05e374adfdbe7b3f8bf0051f1e2fb2b50bbc68a72969acf0f41",
+  "policy_fingerprint": "sha256:b37010107c57510db9a6b82b3a6f5ef4a4bd497f45f46edbd018da185e8b5a40",
   "manifest_fingerprints": {
-    "owner_map": "sha256:537de25b9cbdf89cd204f89e028e9caa008781d349c285e7df40b459bf363305",
-    "test_map": "sha256:dd2f293f7530fcdda4834a0e53f800c8f38352c8ee661cf57d480321d82763e3",
+    "owner_map": "sha256:54a07e7a35f477b2da2f540d3ade29c7b485ac9c7077f38d1a84538a6b80a2c7",
+    "test_map": "sha256:cb47605cce73ed8d45b10e12bdd0b58c742b90182e12f698e813585b85a19cea",
     "generated_zones": "sha256:648ffd2f6b35dc9f7bd43bf0bd01db044cc4bba9428ba25b401474f3e6325592",
     "boundaries": "sha256:14f5c36c7081e35392676626528cf17540722c41b52add64040b946bae83d3ac",
     "proof_lanes": "sha256:56ac808a36c90601cf92c4f18daca66d5cf736b4a1f7f9bdf01c78761780b3c1"
   },
-  "dirty_worktree": false,
-  "generated_at": "1792569761",
+  "dirty_worktree": true,
+  "generated_at": "1793331262",
   "schema_url": "schemas/repo-score.schema.json",
   "standard": "jankurai",
   "standard_version": "0.9.0",
-  "auditor_version": "1.7.5",
+  "auditor_version": "1.7.6",
   "schema_version": "1.9.0",
   "paper_edition": "2026.05-ed8",
   "target_stack_id": "rust-ts-vite-react-postgres-bounded-python",
@@ -24,23 +24,23 @@
   "conformance_decision": "review",
   "conformance_blockers": [],
   "repo": ".",
-  "run_id": "1792569761",
-  "started_at": "1792569761",
-  "elapsed_ms": 906,
+  "run_id": "1793331262",
+  "started_at": "1793331262",
+  "elapsed_ms": 1130,
   "scope": {
     "mode": "full",
     "paths": []
   },
-  "score": 92,
-  "raw_score": 92,
+  "score": 93,
+  "raw_score": 93,
   "decision": {
     "status": "advisory",
     "minimum_score": 85,
     "passed": true,
     "hard_findings": 0,
-    "soft_findings": 3,
+    "soft_findings": 2,
     "ratchet": {
-      "baseline_score": 92,
+      "baseline_score": 93,
       "allowed_drop": 0,
       "passed": true,
       "score_delta": 0,
@@ -53,11 +53,11 @@
     }
   },
   "git": {
-    "head": "4799bab45c9415853bb5a1b1d878aa46cd491700",
+    "head": "b1be4914d01fb1f6d65d32dcf68b1fe9a135247e",
     "base": null,
     "changed_files": 0,
     "mode": "full",
-    "dirty_worktree": false
+    "dirty_worktree": true
   },
   "policy": {
     "path": "./agent/audit-policy.toml",
@@ -72,7 +72,7 @@
     ],
     "mode": "advisory",
     "standard_version": "0.9.0",
-    "auditor_version": "1.7.5",
+    "auditor_version": "1.7.6",
     "schema_version": "1.9.0",
     "paper_edition": "2026.05-ed8",
     "target_stack": "rust-ts-vite-react-postgres-bounded-python"
@@ -289,13 +289,15 @@
     {
       "name": "Contract and boundary integrity",
       "weight": 13,
-      "score": 83,
-      "weighted_points": 10.79,
+      "score": 100,
+      "weighted_points": 13.0,
       "evidence": [
+        "contract surface found",
         "generated contract artifacts found",
         "boundary manifest present",
         "machine-readable schemas present",
         "Rust typed boundary helpers found",
+        "all contract sources have generated zone entries",
         "schema/tooling contract posture is clean"
       ],
       "notes": []
@@ -405,16 +407,20 @@
     {
       "name": "Jankurai tool adoption and CI replacement",
       "weight": 7,
-      "score": 100,
-      "weighted_points": 7.0,
+      "score": 89,
+      "weighted_points": 6.23,
       "evidence": [
         "control-plane files present",
-        "applicable=16",
-        "configured=16",
-        "ci_evidence=16",
-        "artifact_verified=16"
+        "applicable=13",
+        "configured=13",
+        "ci_evidence=11",
+        "artifact_verified=11"
       ],
-      "notes": []
+      "notes": [
+        "some applicable tools lack CI evidence",
+        "missing CI evidence for `proofbind`",
+        "missing CI evidence for `copy-code`"
+      ]
     },
     {
       "name": "Python containment and polyglot hygiene",
@@ -447,7 +453,9 @@
     "has_rendered_ux_lane": true,
     "missing_categories": [],
     "evidence": {
-      "accessibility": [],
+      "accessibility": [
+        "agent/baselines/main.repo-score.json"
+      ],
       "api_mocks": [],
       "artifact_backed_proof": [],
       "design_tokens": [],
@@ -455,6 +463,7 @@
       "layout_stability": [],
       "playwright_visual": [],
       "storybook": [
+        "agent/baselines/main.repo-score.json",
         "crates/jeryu-evidence/src/lib.rs",
         "crates/jeryu-mapcheck/src/db_boundary.rs",
         "ops/ci/security.sh"
@@ -464,11 +473,11 @@
   },
   "tool_adoption": {
     "control_plane_present": true,
-    "applicable_count": 16,
-    "configured_count": 16,
-    "ci_evidence_count": 16,
-    "artifact_verified_count": 16,
-    "replaced_count": 16,
+    "applicable_count": 13,
+    "configured_count": 13,
+    "ci_evidence_count": 11,
+    "artifact_verified_count": 11,
+    "replaced_count": 11,
     "items": [
       {
         "id": "audit-ci",
@@ -524,18 +533,18 @@
         "category": "proof",
         "mode": "auto",
         "applicable": true,
-        "status": "artifact_verified",
+        "status": "configured",
         "replaced_tools": [
           "manual changed-surface routing",
           "ad hoc proof obligation lists"
         ],
         "evidence": [
           "mode=auto",
-          "tool-adoption config entry present",
-          "CI command found in workflow",
-          "artifact uploads found: target/jankurai/proofbind/surface-witness.json, target/jankurai/proofbind/obligations.json"
+          "tool-adoption config entry present"
         ],
-        "missing": [],
+        "missing": [
+          "CI command evidence"
+        ],
         "local_command": "jankurai proofbind verify . --changed-from origin/main",
         "ci_command": "jankurai proofbind verify . --changed-from",
         "artifact_paths": [
@@ -572,18 +581,18 @@
         "category": "audit",
         "mode": "auto",
         "applicable": true,
-        "status": "artifact_verified",
+        "status": "configured",
         "replaced_tools": [
           "ad hoc copy-code review",
           "manual duplication triage"
         ],
         "evidence": [
           "mode=auto",
-          "tool-adoption config entry present",
-          "CI command found in workflow",
-          "artifact uploads found: target/jankurai/copy-code.json, target/jankurai/copy-code.md"
+          "tool-adoption config entry present"
         ],
-        "missing": [],
+        "missing": [
+          "CI command evidence"
+        ],
         "local_command": "cargo run -p jankurai -- copy-code . --json target/jankurai/copy-code.json --md target/jankurai/copy-code.md",
         "ci_command": "cargo run -p jankurai -- copy-code . --json target/jankurai/copy-code.json --md target/jankurai/copy-code.md",
         "artifact_paths": [
@@ -618,19 +627,16 @@
       {
         "id": "ci-bad-behavior",
         "category": "security",
-        "mode": "auto",
-        "applicable": true,
-        "status": "artifact_verified",
+        "mode": "disabled",
+        "applicable": false,
+        "status": "not_applicable",
         "replaced_tools": [
           "mutable workflow refs",
           "secret echo/debug workflow checks",
           "non-blocking security scans"
         ],
         "evidence": [
-          "mode=auto",
-          "tool-adoption config entry present",
-          "CI command found in workflow",
-          "artifact uploads found: target/jankurai/language-bad-behavior.log"
+          "mode=disabled"
         ],
         "missing": [],
         "local_command": "cargo test -p jankurai --test language_bad_behavior",
@@ -642,19 +648,16 @@
       {
         "id": "git-bad-behavior",
         "category": "audit",
-        "mode": "auto",
-        "applicable": true,
-        "status": "artifact_verified",
+        "mode": "disabled",
+        "applicable": false,
+        "status": "not_applicable",
         "replaced_tools": [
           "destructive git automation",
           "force-push release scripts",
           "hidden stash-based state"
         ],
         "evidence": [
-          "mode=auto",
-          "tool-adoption config entry present",
-          "CI command found in workflow",
-          "artifact uploads found: target/jankurai/language-bad-behavior.log"
+          "mode=disabled"
         ],
         "missing": [],
         "local_command": "cargo test -p jankurai --test language_bad_behavior",
@@ -666,19 +669,16 @@
       {
         "id": "release-bad-behavior",
         "category": "release",
-        "mode": "auto",
-        "applicable": true,
-        "status": "artifact_verified",
+        "mode": "disabled",
+        "applicable": false,
+        "status": "not_applicable",
         "replaced_tools": [
           "manual release checklist",
           "ad hoc tag and artifact review",
           "manual provenance review"
         ],
         "evidence": [
-          "mode=auto",
-          "tool-adoption config entry present",
-          "CI command found in workflow",
-          "artifact uploads found: target/jankurai/language-bad-behavior.log"
+          "mode=disabled"
         ],
         "missing": [],
         "local_command": "cargo test -p jankurai --test language_bad_behavior",
@@ -690,7 +690,7 @@
       {
         "id": "ux-qa",
         "category": "ux",
-        "mode": "auto",
+        "mode": "disabled",
         "applicable": false,
         "status": "not_applicable",
         "replaced_tools": [
@@ -699,7 +699,7 @@
           "visual baselines"
         ],
         "evidence": [
-          "mode=auto"
+          "mode=disabled"
         ],
         "missing": [],
         "local_command": "jankurai ux audit --config agent/ux-qa.toml --out target/jankurai/ux-qa.json",
@@ -711,14 +711,14 @@
       {
         "id": "db-migration-analyze",
         "category": "db",
-        "mode": "auto",
+        "mode": "disabled",
         "applicable": false,
         "status": "not_applicable",
         "replaced_tools": [
           "manual migration review"
         ],
         "evidence": [
-          "mode=auto"
+          "mode=disabled"
         ],
         "missing": [],
         "local_command": "jankurai migrate . --analyze --json target/jankurai/migration-report.json",
@@ -776,14 +776,14 @@
       {
         "id": "vibe-coverage",
         "category": "audit",
-        "mode": "auto",
+        "mode": "disabled",
         "applicable": false,
         "status": "not_applicable",
         "replaced_tools": [
           "manual vibe-coding coverage spreadsheet"
         ],
         "evidence": [
-          "mode=auto"
+          "mode=disabled"
         ],
         "missing": [],
         "local_command": "jankurai vibe coverage --source agent/vibe-coverage.toml --tips tips/vibe_coding --json target/jankurai/vibe-coverage.json --md target/jankurai/vibe-coverage.md",
@@ -796,7 +796,7 @@
       {
         "id": "coverage-evidence",
         "category": "proof",
-        "mode": "auto",
+        "mode": "disabled",
         "applicable": false,
         "status": "not_applicable",
         "replaced_tools": [
@@ -804,7 +804,7 @@
           "ad hoc mutation survivor review"
         ],
         "evidence": [
-          "mode=auto"
+          "mode=disabled"
         ],
         "missing": [],
         "local_command": "jankurai coverage audit . --config agent/coverage-sources.toml --json target/jankurai/coverage/coverage-audit.json --md target/jankurai/coverage/coverage-audit.md",
@@ -931,7 +931,7 @@
       }
     ],
     "evidence": {
-      "applicable_count": 16,
+      "applicable_count": 13,
       "applicable_tools": [
         "audit-ci",
         "proof-routing",
@@ -939,9 +939,6 @@
         "proofmark-rust",
         "copy-code",
         "security",
-        "ci-bad-behavior",
-        "git-bad-behavior",
-        "release-bad-behavior",
         "contract-drift",
         "rust-witness",
         "authz-matrix",
@@ -950,17 +947,12 @@
         "release-readiness",
         "cost-budget"
       ],
-      "artifact_verified_count": 16,
+      "artifact_verified_count": 11,
       "artifact_verified_tools": [
         "audit-ci",
         "proof-routing",
-        "proofbind",
         "proofmark-rust",
-        "copy-code",
         "security",
-        "ci-bad-behavior",
-        "git-bad-behavior",
-        "release-bad-behavior",
         "contract-drift",
         "rust-witness",
         "authz-matrix",
@@ -969,17 +961,12 @@
         "release-readiness",
         "cost-budget"
       ],
-      "ci_evidence_count": 16,
+      "ci_evidence_count": 11,
       "ci_evidence_tools": [
         "audit-ci",
         "proof-routing",
-        "proofbind",
         "proofmark-rust",
-        "copy-code",
         "security",
-        "ci-bad-behavior",
-        "git-bad-behavior",
-        "release-bad-behavior",
         "contract-drift",
         "rust-witness",
         "authz-matrix",
@@ -989,7 +976,7 @@
         "cost-budget"
       ],
       "config_present": true,
-      "configured_count": 16,
+      "configured_count": 13,
       "configured_tools": [
         "audit-ci",
         "proof-routing",
@@ -997,9 +984,6 @@
         "proofmark-rust",
         "copy-code",
         "security",
-        "ci-bad-behavior",
-        "git-bad-behavior",
-        "release-bad-behavior",
         "contract-drift",
         "rust-witness",
         "authz-matrix",
@@ -1010,7 +994,10 @@
       ],
       "control_plane_present": true
     },
-    "missing": []
+    "missing": [
+      "proofbind",
+      "copy-code"
+    ]
   },
   "security_evidence": {},
   "boundaries": {
@@ -1019,9 +1006,9 @@
   "copy_code": {
     "schema_version": "1.1.0",
     "generated_by": "jankurai copy-code",
-    "generated_at": "2026-10-21T08:02:40.402672857+00:00",
+    "generated_at": "2026-10-30T03:34:21.188974178+00:00",
     "repo": ".",
-    "auditor_version": "1.7.5",
+    "auditor_version": "1.7.6",
     "status": "review",
     "policy": {
       "active_source_only": true,
@@ -1057,7 +1044,7 @@
       ]
     },
     "summary": {
-      "files_scanned": 222,
+      "files_scanned": 226,
       "files_considered": 95,
       "active_files": 95,
       "exact_file_classes": 0,
@@ -1584,71 +1571,37 @@
     },
     {
       "severity": "medium",
-      "category": "boundary",
-      "path": "agent/boundaries.toml",
-      "problem": "`Contract and boundary integrity` scored 83 below the standard floor of 85",
-      "agent_fix": "add generated contracts and boundary checks for public APIs, data access, and cross-runtime seams",
-      "evidence": [
-        "generated contract artifacts found",
-        "boundary manifest present",
-        "machine-readable schemas present",
-        "Rust typed boundary helpers found"
-      ],
-      "check_id": "HLT-007-HANDWRITTEN-CONTRACT:boundary",
-      "hardness": "soft",
-      "confidence": 0.76,
-      "evidence_kind": "contract-manifest",
-      "rerun_command": "just fast",
-      "fingerprint": "sha256:f99225a43e4f4f3117d63ea46aecacba7db7acea110598e70839bdd8ba8dda03",
-      "rule_id": "HLT-007-HANDWRITTEN-CONTRACT",
-      "tlr": "Contracts/data",
-      "lane": "contract",
-      "docs_url": "docs/audit-rubric.md#known-vibe-coding-insults",
-      "owner": "agent"
-    },
-    {
-      "severity": "medium",
       "category": "proof",
-      "path": "ops/ci/redline-consumer-authority-test.sh",
+      "path": "agent/baselines/main.repo-score.json",
       "problem": "human review or proof claim lacks reproducible evidence",
       "agent_fix": "attach raw CI logs, review receipts, and replayable commands instead of accepting claims or summaries",
       "evidence": [
-        "cat >\"$tmp/fabricated.manifest.toml\" <<'EOF'"
+        "\"cat >\\\"$tmp/fabricated.manifest.toml\\\" <<'EOF'\""
       ],
       "check_id": "HLT-027-HUMAN-REVIEW-EVIDENCE-GAP:proof",
       "hardness": "soft",
       "confidence": 0.88,
       "evidence_kind": "receipt",
       "rerun_command": "just score",
-      "fingerprint": "sha256:a3154fed6afc6d0c6d3427cad4543a6b11bdbf9338bdc0e99ffbc2b8b0a50670",
+      "fingerprint": "sha256:886462a1cf2ad01e7bc387cdbc049a84c7dccd1f80c7c7bfc4bca2738a6886dd",
       "rule_id": "HLT-027-HUMAN-REVIEW-EVIDENCE-GAP",
       "tlr": "Repair",
       "lane": "audit",
       "docs_url": "docs/testing.md",
-      "owner": "ops",
-      "line": 42,
+      "owner": "agent",
+      "line": 1616,
       "matched_term": "review evidence",
       "reason": "proof and review claims need receipts"
     }
   ],
   "agent_fix_queue": [
     {
-      "path": "agent/boundaries.toml",
-      "priority": "medium",
-      "rule_id": "HLT-007-HANDWRITTEN-CONTRACT",
-      "tlr": "Contracts/data",
-      "lane": "contract",
-      "owner": "agent",
-      "task": "add generated contracts and boundary checks for public APIs, data access, and cross-runtime seams",
-      "why": "`Contract and boundary integrity` scored 83 below the standard floor of 85"
-    },
-    {
-      "path": "ops/ci/redline-consumer-authority-test.sh",
+      "path": "agent/baselines/main.repo-score.json",
       "priority": "medium",
       "rule_id": "HLT-027-HUMAN-REVIEW-EVIDENCE-GAP",
       "tlr": "Repair",
       "lane": "audit",
-      "owner": "ops",
+      "owner": "agent",
       "task": "attach raw CI logs, review receipts, and replayable commands instead of accepting claims or summaries",
       "why": "human review or proof claim lacks reproducible evidence"
     },

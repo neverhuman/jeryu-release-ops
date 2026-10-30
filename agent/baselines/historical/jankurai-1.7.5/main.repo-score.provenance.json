@@ -1,0 +1,36 @@
+{
+  "schema": "jeryu.jankurai-baseline-provenance/v1",
+  "repository": "jeryu/jeryu-release-ops",
+  "generated_at": "2026-10-21T08:02:58Z",
+  "source": {
+    "remote": "https://git.neverhuman.org/git/jeryu/jeryu-release-ops.git",
+    "branch": "main",
+    "commit": "4799bab45c9415853bb5a1b1d878aa46cd491700",
+    "tree": "0c4bbfdb610ad863c63e166a3dc34a84977e388b",
+    "dirty_worktree": false,
+    "isolation": "clone-no-local-no-hardlinks-no-tags"
+  },
+  "jankurai": {
+    "version": "jankurai 1.7.5",
+    "source_tag": "v1.7.5",
+    "source_commit": "bb5a1ccaeda629ab2c36d99d20f9b89855ab6fcb",
+    "source_tree": "9cd7195f548500505e7c7aa8b8260836448046ae",
+    "binary_sha256": "d2414884a3dbe1cc2d02b4240588869f6afac26ff0f167829e907b1617501121"
+  },
+  "report": {
+    "path": "agent/baselines/main.repo-score.json",
+    "sha256": "076adcda53bebd92a8d52677dfc912916c1b1aba049cdcbdc9b2f8f00a845bbe",
+    "generator_artifact_sha256": "9bcf4981b03effe6fd9278221022f4b578b07bec6dc1d387ab8b1b0b793c68f7",
+    "mode": "full",
+    "score": 92,
+    "hard_findings": 0,
+    "caps": 0,
+    "report_fingerprint": "sha256:6e48012f9e9bdce8b0ef97ee5c71ba01fddd0f8049eafa232658b0d700f98e81",
+    "input_fingerprint": "sha256:55d1bd02f118a9a7c62a1ee2b4bb5d2f70848b72cc792c4e52fb603a7dc057e2",
+    "policy_fingerprint": "sha256:9da4b18bb9f9117b2422fe4cbc9c2050a15fe4d1034553b68fbda8347885f843"
+  },
+  "acceptance": {
+    "self_authorizing": false,
+    "required_mechanism": "independent exact-head review plus protected merge"
+  }
+}
