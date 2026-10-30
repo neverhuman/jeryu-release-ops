@@ -20,6 +20,26 @@ if ! git rev-parse --verify "${BASE_REF}^{commit}" >/dev/null 2>&1; then
   exit 1
 fi
 
+# Reconstruct a clean audit tree from protected main plus exactly the rendered
+# policy blob. Fixed commit metadata makes its identity reproducible on hosts.
+policy_variant_commit() {
+  local source="$1" policy="$2" index blob tree result
+  mkdir -p target/jankurai-policy-identity
+  index="$(mktemp "$PWD/target/jankurai-policy-identity/index.XXXXXXXX")"
+  rm -- "$index"
+  blob="$(git hash-object -w -- "$policy")" || return 1
+  GIT_INDEX_FILE="$index" git read-tree "$source" || return 1
+  GIT_INDEX_FILE="$index" git update-index --add --cacheinfo "100644,$blob,agent/audit-policy.toml" || return 1
+  tree="$(GIT_INDEX_FILE="$index" git write-tree)" || return 1
+  rm -- "$index"
+  result="$(printf '%s\n' 'proof baseline: protected main with rendered audit policy' |
+    GIT_AUTHOR_NAME=proof-evidence GIT_AUTHOR_EMAIL=proof-evidence@invalid \
+    GIT_COMMITTER_NAME=proof-evidence GIT_COMMITTER_EMAIL=proof-evidence@invalid \
+    GIT_AUTHOR_DATE='2000-01-01T00:00:00Z' GIT_COMMITTER_DATE='2000-01-01T00:00:00Z' \
+    git -c commit.gpgsign=false commit-tree "$tree" -p "$source")" || return 1
+  printf '%s\n' "$result"
+}
+
 validate_baseline() {
   local base_commit baseline_commit baseline_sha baseline_tree current_head path
   for path in "${BASELINE_REPORT}" "${BASELINE_PROVENANCE}"; do
@@ -52,38 +72,15 @@ validate_baseline() {
   fi
   baseline_tree="$(git rev-parse --verify "${baseline_commit}^{tree}")"
   baseline_sha="$(sha256sum "${BASELINE_REPORT}" | awk '{print $1}')"
-  # The ratchet refuses a baseline audited under a different policy, so a change
-  # that edits agent/audit-policy.toml (a rendered required_tool_version) carries
-  # a baseline of protected main with that change's policy overlaid. A dirty
-  # baseline is accepted only as that declared overlay, checked here rather than
-  # trusted: the overlaid policy must be this commit's agent/audit-policy.toml
-  # byte for byte, and the source digest the policy at the audited commit.
-  baseline_dirty="$(jq -r '.source.dirty_worktree' "${BASELINE_PROVENANCE}")"
-  case "${baseline_dirty}" in
-    false) ;;
-    true)
-      jq -e '.policy.overlay == true and .policy.path == "agent/audit-policy.toml"' \
-        "${BASELINE_PROVENANCE}" >/dev/null || {
-        printf 'baseline audited a dirty tree without a declared policy overlay\n' >&2
-        return 1
-      }
-      [[ "$(jq -er '.policy.sha256' "${BASELINE_PROVENANCE}")" == \
-         "$(sha256sum agent/audit-policy.toml | awk '{print $1}')" ]] || {
-        printf 'baseline policy overlay is not this commit'"'"'s agent/audit-policy.toml\n' >&2
-        return 1
-      }
-      [[ "$(jq -er '.policy.source_commit_policy_sha256' "${BASELINE_PROVENANCE}")" == \
-         "$(git show "${baseline_commit}:agent/audit-policy.toml" | sha256sum | awk '{print $1}')" ]] || {
-        printf 'baseline source policy digest is not agent/audit-policy.toml at %s\n' \
-          "${baseline_commit}" >&2
-        return 1
-      }
-      ;;
-    *)
-      printf 'baseline provenance dirty_worktree must be a boolean: %s\n' "${baseline_dirty}" >&2
-      return 1
-      ;;
-  esac
+  # No dirty baseline is accepted. Reconstruct the only permitted policy tree
+  # from the protected source object, rather than trusting an overlay claim.
+  audit_commit="$(policy_variant_commit "$baseline_commit" agent/audit-policy.toml)"
+  audit_tree="$(git rev-parse "${audit_commit}^{tree}")"
+  jq -e --arg commit "$audit_commit" --arg tree "$audit_tree" \
+    --arg policy "$(sha256sum agent/audit-policy.toml | awk '{print $1}')" \
+    '.source.audit_commit == $commit and .source.audit_tree == $tree and
+     .policy.sha256 == $policy and .policy.overlay == false' \
+    "$BASELINE_PROVENANCE" >/dev/null
   jq -e \
     --slurpfile baseline "${BASELINE_REPORT}" \
     --arg baseline_commit "${baseline_commit}" \
@@ -91,13 +88,12 @@ validate_baseline() {
     --arg baseline_sha "${baseline_sha}" \
     --arg binary_sha "${JERYU_JANKURAI_SHA256}" \
     --arg version "${JERYU_JANKURAI_VERSION}" \
-    --arg baseline_dirty "${baseline_dirty}" \
     '.schema == "jeryu.jankurai-baseline-provenance/v1" and
      .repository == "jeryu/jeryu-release-ops" and
      .source.branch == "main" and
      .source.commit == $baseline_commit and
      .source.tree == $baseline_tree and
-     .source.dirty_worktree == ($baseline_dirty == "true") and
+     .source.dirty_worktree == false and
      .jankurai.version == $version and
      .jankurai.binary_sha256 == $binary_sha and
      .report.path == "agent/baselines/main.repo-score.json" and
@@ -112,10 +108,8 @@ validate_baseline() {
      .report.score >= 85 and .report.hard_findings == 0 and .report.caps == 0' \
     "${BASELINE_PROVENANCE}" >/dev/null
   jq -e \
-    --arg full "${baseline_commit}" \
-    --arg baseline_dirty "${baseline_dirty}" \
-    '.git.head == $full and .git.mode == "full" and
-     .git.dirty_worktree == ($baseline_dirty == "true") and
+    --arg full "${audit_commit}" \
+    '.git.head == $full and .git.mode == "full" and .git.dirty_worktree == false and
      .score >= 85 and (.caps_applied | length) == 0 and .decision.hard_findings == 0' \
     "${BASELINE_REPORT}" >/dev/null
 }

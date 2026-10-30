@@ -1,5 +1,5 @@
 {
-  "report_fingerprint": "sha256:8293963559b786684c3f5b2d601c398156093d6c8b97589f8d683ff484631273",
+  "report_fingerprint": "sha256:6e620edba414c1bbec9c8493a1704b348b092647b764de45c2ddd259cba4d35d",
   "input_fingerprint": "sha256:cefe783641d9e05e374adfdbe7b3f8bf0051f1e2fb2b50bbc68a72969acf0f41",
   "policy_fingerprint": "sha256:b37010107c57510db9a6b82b3a6f5ef4a4bd497f45f46edbd018da185e8b5a40",
   "manifest_fingerprints": {
@@ -9,8 +9,8 @@
     "boundaries": "sha256:14f5c36c7081e35392676626528cf17540722c41b52add64040b946bae83d3ac",
     "proof_lanes": "sha256:56ac808a36c90601cf92c4f18daca66d5cf736b4a1f7f9bdf01c78761780b3c1"
   },
-  "dirty_worktree": true,
-  "generated_at": "1793331262",
+  "dirty_worktree": false,
+  "generated_at": "1793395893",
   "schema_url": "schemas/repo-score.schema.json",
   "standard": "jankurai",
   "standard_version": "0.9.0",
@@ -23,10 +23,10 @@
   "observed_conformance_level": "HL1",
   "conformance_decision": "review",
   "conformance_blockers": [],
-  "repo": ".",
-  "run_id": "1793331262",
-  "started_at": "1793331262",
-  "elapsed_ms": 1130,
+  "repo": ".agent/worktrees/render176-baseline",
+  "run_id": "1793395893",
+  "started_at": "1793395893",
+  "elapsed_ms": 1144,
   "scope": {
     "mode": "full",
     "paths": []
@@ -53,14 +53,14 @@
     }
   },
   "git": {
-    "head": "b1be4914d01fb1f6d65d32dcf68b1fe9a135247e",
+    "head": "c20a289d6c933a84c5db08ae59009b5c39b6dd90",
     "base": null,
     "changed_files": 0,
     "mode": "full",
-    "dirty_worktree": true
+    "dirty_worktree": false
   },
   "policy": {
-    "path": "./agent/audit-policy.toml",
+    "path": ".agent/worktrees/render176-baseline/agent/audit-policy.toml",
     "minimum_score": 85,
     "fail_on": [
       "critical",
@@ -1006,8 +1006,8 @@
   "copy_code": {
     "schema_version": "1.1.0",
     "generated_by": "jankurai copy-code",
-    "generated_at": "2026-10-30T03:34:21.188974178+00:00",
-    "repo": ".",
+    "generated_at": "2026-10-30T21:31:32.744025864+00:00",
+    "repo": ".agent/worktrees/render176-baseline",
     "auditor_version": "1.7.6",
     "status": "review",
     "policy": {

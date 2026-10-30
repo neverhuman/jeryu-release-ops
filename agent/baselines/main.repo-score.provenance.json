@@ -1,14 +1,16 @@
 {
   "schema": "jeryu.jankurai-baseline-provenance/v1",
   "repository": "jeryu/jeryu-release-ops",
-  "generated_at": "2026-10-30T03:34:33Z",
+  "generated_at": "2026-10-30T21:32:22Z",
   "source": {
     "remote": "https://git.neverhuman.org/git/jeryu/jeryu-release-ops.git",
     "branch": "main",
     "commit": "b1be4914d01fb1f6d65d32dcf68b1fe9a135247e",
     "tree": "161b5fc614bc59e35504eb41b54b65a851ef942f",
-    "dirty_worktree": true,
-    "isolation": "clone-no-local-no-hardlinks-no-tags"
+    "dirty_worktree": false,
+    "isolation": "detached-worktree-exact-policy-variant",
+    "audit_commit": "c20a289d6c933a84c5db08ae59009b5c39b6dd90",
+    "audit_tree": "a71d7ccecc1c729a59df108734c5eabf5f606b87"
   },
   "jankurai": {
     "version": "jankurai 1.7.6",
@@ -17,25 +19,26 @@
     "source_tree": "07a2af92376fb3e834af8253f86a047616e295c5",
     "binary_sha256": "63b445f21ca375ebd9515df49d0095aff6823b731121102651caf4e57cef1cf9"
   },
-  "command": "jankurai audit . --full --mode advisory --policy agent/audit-policy.toml --json <out> --no-score-history",
+  "command": "jankurai audit . --full --mode advisory --json <out> --no-score-history (in clean reconstructed audit_commit worktree)",
   "policy": {
     "path": "agent/audit-policy.toml",
-    "overlay": true,
+    "overlay": false,
     "sha256": "08e5222c78867b4f8abd7fb3473e114b2e4df976f2ca8e23332d9967b6e3396e",
     "source_commit_policy_sha256": "5767839b683b8de14a145eff65fde9d7a41c31c56bf1fd8c2c1c5ad64302b180",
-    "reason": "the ratchet refuses a baseline audited under a different policy; protected main is audited with the policy this change renders (only required_tool_version differs), overlaid on the clean clone"
+    "reason": "clean deterministic child commit of source.commit; only agent/audit-policy.toml is replaced by the policy blob of this head; the required lane reconstructs and verifies audit_commit and audit_tree"
   },
   "report": {
     "path": "agent/baselines/main.repo-score.json",
-    "sha256": "c17e822f7f7165f5c3962d1f84be989035b9b88dd8d28cc0dc6b892bec8b1f3c",
+    "sha256": "a7f2fd151302146b4792f68f16c46bd7fa2c0ba616f5326ad85372eb04af50d7",
     "normalization": "single-trailing-lf-added-for-tracked-text-file",
     "mode": "full",
     "score": 93,
     "hard_findings": 0,
     "caps": 0,
-    "report_fingerprint": "sha256:8293963559b786684c3f5b2d601c398156093d6c8b97589f8d683ff484631273",
+    "report_fingerprint": "sha256:6e620edba414c1bbec9c8493a1704b348b092647b764de45c2ddd259cba4d35d",
     "input_fingerprint": "sha256:cefe783641d9e05e374adfdbe7b3f8bf0051f1e2fb2b50bbc68a72969acf0f41",
-    "policy_fingerprint": "sha256:b37010107c57510db9a6b82b3a6f5ef4a4bd497f45f46edbd018da185e8b5a40"
+    "policy_fingerprint": "sha256:b37010107c57510db9a6b82b3a6f5ef4a4bd497f45f46edbd018da185e8b5a40",
+    "generator_artifact_sha256": "f37543654d9b599e0a341892d7c38740be48c3ff97a7bb30601f186b0e89d492"
   },
   "acceptance": {
     "self_authorizing": false,
